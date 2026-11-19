@@ -2,6 +2,7 @@
 // sem ela o front roda no modo demonstração (dados de demo.ts), como antes (decisão D7).
 
 import type { Base } from "./demo";
+import type { Coleira, OcupacaoPiquete, Verificacao } from "./tipos";
 import type { Fazenda, GeoJsonPolygon, Lotacao, Movimentacao, Piquete, PlanoManejo, Rebanho } from "./tipos";
 
 export const API_URL: string = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
@@ -112,6 +113,12 @@ export function sair(): void {
 }
 
 export const api = {
+  coleiras: () => chamar<Coleira[]>("GET", "/coleiras"),
+  ocupacao: () => chamar<OcupacaoPiquete[]>("GET", "/ocupacao"),
+  verificacoes: () => chamar<{ verificacoes: Verificacao[]; avisos: string[] }>("GET", "/verificacoes"),
+  avancarCampo: () => chamar("POST", "/simulador/avancar", { horas: 24 }),
+  moverColeiras: (id: string, piqueteId: string) =>
+    chamar("POST", `/simulador/executar/${encodeURIComponent(id)}`, { piquete_id: piqueteId }),
   gerarPlano: () => chamar<PlanoManejo>("POST", "/plano"),
   aceitar: (id: string, destinoId?: string) =>
     chamar<Movimentacao>("POST", `/movimentacoes/${id}/aceitar`, destinoId ? { destino_id: destinoId } : undefined),

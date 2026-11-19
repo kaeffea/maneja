@@ -1,0 +1,45 @@
+.campo, .campo-simulador, .campo-verificacoes {
+  display: grid;
+  gap: 12px;
+}
+
+.campo-simulador {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  align-items: end;
+}
+
+.campo-simulador h2 { grid-column: 1 / -1; }
+.campo-simulador label { display: grid; gap: 4px; min-width: 0; }
+.campo-simulador select { width: 100%; min-height: 40px; }
+.campo-tabela { width: 100%; border-collapse: collapse; overflow-wrap: anywhere; }
+.campo-tabela th, .campo-tabela td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--cor-borda);
+  text-align: left;
+}
+
+.campo-verificacoes { padding: 0; list-style: none; }
+.campo-verificacoes li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.campo-status {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto);
+}
+.campo-status.confere, .campo-status.cumprida {
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-escura);
+}
+.campo-status.diverge, .campo-status.divergente {
+  background: var(--cor-erro-suave);
+  color: var(--cor-erro);
+}
+.campo-status.pendente {
+  background: var(--cor-alerta-suave);
+  color: var(--cor-destaque-escura);
+}
+
+@media (max-width: 480px) {
+  .campo-tabela { font-size: 0.75rem; }
+}
