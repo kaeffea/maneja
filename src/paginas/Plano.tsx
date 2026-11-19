@@ -131,9 +131,17 @@ function CartaoMovimento({ mov, bloqueado }: { mov: Movimentacao; bloqueado: boo
 
 function ResumoClima({ clima }: { clima: PrevisaoClima }) {
   const resumo = resumoClima(clima);
+  const [agora] = useState(Date.now);
   return (
     <section className="cartao plano-clima" aria-label="Previsão do tempo">
       <h2 className="cartao-titulo">Previsão da semana</h2>
+      {clima.fonte && (
+        <p className="cartao-subtitulo">
+          {clima.fonte === "open-meteo" ? "Open-Meteo" : "Previsão simulada"}
+          {clima.consultado_em && agora - Date.parse(clima.consultado_em) > 12 * 3_600_000
+            ? " · desatualizada" : ""}
+        </p>
+      )}
       <p className="cartao-subtitulo">
         {decimal(resumo.chuva_total_mm, 0)} mm de chuva · {resumo.temp_min_c} a {resumo.temp_max_c} °C
         {resumo.dias_chuva_forte.length > 0 ? ` · ${resumo.dias_chuva_forte.length} com chuva forte` : ""}

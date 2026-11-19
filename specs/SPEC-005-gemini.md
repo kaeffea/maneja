@@ -17,7 +17,7 @@ O agente (SPEC-001) já decide por regras e aceita um `llm` com `gerar_texto(pro
 - **R4.** Os testes nunca chamam a rede: o `cliente_http` é injetado (use `httpx.MockTransport`).
 
 ## Constantes
-Modelo padrão `gemini-2.0-flash` (conferir o nome disponível na conta), cota diária padrão 50.
+Modelo padrão `gemini-3.1-flash-lite`, substituindo o Gemini 2.0 Flash após sua desativação. O modelo pode ser configurado conforme o acesso da conta. Cota diária padrão de 50 por instância da aplicação. [Referência de modelos e desativações do Google](https://ai.google.dev/gemini-api/docs/deprecations).
 
 ## Cenários (BDD)
 ```gherkin

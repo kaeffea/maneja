@@ -5,10 +5,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import cached_property
 from pathlib import Path
 
-from .adaptadores.clima import ClimaSimulado
+from .adaptadores.clima import ClimaOpenMeteo, ClimaSimulado
 from .adaptadores.coleiras import PERDA_SINAL_PADRAO, SimuladorColeiras
+from .adaptadores.llm import ControleDeCota, GeminiLLM
+from .adaptadores.satelite import ISatelite, SateliteCopernicus, SateliteSimulado
 from .adaptadores.seugado import ISeuGado, SeuGadoApi, SeuGadoArquivo, SeuGadoDesligado
 from .autenticacao import ConfigAuth, hash_senha
 from .datas import hoje_na_fazenda
@@ -16,6 +19,7 @@ from .demo import repositorio_demo
 from .servico import Relogio, Sistema
 
 EXEMPLO_PLANO_SEUGADO = Path(__file__).resolve().parent.parent / "exemplos" / "plano-seugado.json"
+MODELO_GEMINI_PADRAO = "gemini-3.1-flash-lite"
 
 # Valores só para desenvolvimento e demonstração. Em produção, defina as variáveis (SPEC-013).
 EMAIL_PADRAO = "tecnico@maneja.app"
@@ -36,6 +40,12 @@ def auth_do_ambiente() -> ConfigAuth:
 
 @dataclass
 class Config:
+    gemini_chave: str = ""
+    gemini_modelo: str = MODELO_GEMINI_PADRAO
+    gemini_cota_diaria: int = 50
+    clima_modo: str = "simulado"
+    cdse_client_id: str = ""
+    cdse_client_secret: str = ""
     seugado_modo: str = "desligado"
     seugado_arquivo: str = str(EXEMPLO_PLANO_SEUGADO)
     seugado_url: str = ""
@@ -49,11 +59,37 @@ class Config:
     cors_origens: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     semear: bool = True  # banco vazio recebe a fazenda de demonstração
 
+    @cached_property
+    def llm(self) -> ControleDeCota | None:
+        if self.gemini_chave:
+            return ControleDeCota(GeminiLLM(self.gemini_chave, self.gemini_modelo), self.gemini_cota_diaria)
+        return None
+
+    @cached_property
+    def clima(self) -> ClimaOpenMeteo | ClimaSimulado:
+        return ClimaOpenMeteo() if self.clima_modo == "open-meteo" else ClimaSimulado()
+
+    @cached_property
+    def satelite(self) -> ISatelite:
+        if self.cdse_client_id and self.cdse_client_secret:
+            return SateliteCopernicus(self.cdse_client_id, self.cdse_client_secret)
+        return SateliteSimulado()
+
+    @cached_property
+    def seugado(self) -> ISeuGado:
+        return adaptador_seugado(self)
+
     @classmethod
     def do_ambiente(cls) -> Config:
         e = os.environ
         semente = e.get("MANEJA_SEMENTE")
         return cls(
+            gemini_chave=e.get("MANEJA_GEMINI_API_KEY", ""),
+            gemini_modelo=e.get("MANEJA_GEMINI_MODELO", MODELO_GEMINI_PADRAO),
+            gemini_cota_diaria=int(e.get("MANEJA_GEMINI_COTA_DIARIA", "50")),
+            clima_modo=e.get("MANEJA_CLIMA", "simulado"),
+            cdse_client_id=e.get("MANEJA_CDSE_CLIENT_ID", ""),
+            cdse_client_secret=e.get("MANEJA_CDSE_CLIENT_SECRET", ""),
             seugado_modo=e.get("MANEJA_SEUGADO_MODO", "desligado"),
             seugado_arquivo=e.get("MANEJA_SEUGADO_ARQUIVO", str(EXEMPLO_PLANO_SEUGADO)),
             seugado_url=e.get("MANEJA_SEUGADO_URL", ""),
@@ -95,7 +131,8 @@ def montar_sistema(config: Config | None = None, inicio: datetime | None = None,
     simulador = SimuladorColeiras(repo.coleiras, repo.piquetes, config.perda_sinal, config.semente)
     if getattr(repo, "fisico", None):
         simulador.fisico.update(repo.fisico)
-    sistema = Sistema(repo, clima or ClimaSimulado(), simulador, relogio, llm, adaptador_seugado(config))
+    sistema = Sistema(repo, clima if clima is not None else config.clima, simulador, relogio,
+                      llm if llm is not None else config.llm, config.seugado, config.satelite)
     sistema.atualizar_coleiras()
     sistema.verificacoes()  # com a integração ligada, registra quem está na origem de cada movimentação do SeuGado
     return sistema
