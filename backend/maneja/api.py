@@ -200,6 +200,10 @@ def criar_app(sistema: Sistema | None = None, auth: ConfigAuth | None = None, re
     def ndvi(piquete_id: str | None = None):
         return jsonable_encoder([l for l in s().repo.ndvi if piquete_id in (None, l.piquete_id)])
 
+    @r.post("/ndvi/atualizar")
+    def atualizar_ndvi():
+        return executar(s().atualizar_ndvi)
+
     @r.get("/clima")
     def clima():
         return jsonable_encoder(s().previsao())

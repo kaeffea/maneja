@@ -95,6 +95,8 @@ class PrevisaoDia:
 class PrevisaoClima:
     fazenda_id: str
     dias: list[PrevisaoDia]
+    fonte: str = "simulado"
+    consultado_em: str = ""
 
 
 @dataclass
