@@ -41,4 +41,4 @@ stateDiagram-v2
     }
 ```
 
-Código: `dominio.StatusMovimentacao`, `dominio.StatusVerificacao`, `monitoramento.ocupacao`.
+Código: [tipos de status](../../backend/maneja/dominio.py), [verificação](../../backend/maneja/verificacao.py) e [ocupação](../../backend/maneja/monitoramento.py).

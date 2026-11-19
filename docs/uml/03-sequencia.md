@@ -49,4 +49,4 @@ sequenceDiagram
     end
 ```
 
-Código: `backend/maneja/api.py`, `servico.py`, `agente.py`, `verificacao.py`.
+Código: [API](../../backend/maneja/api.py), [serviço](../../backend/maneja/servico.py), [agente](../../backend/maneja/agente.py) e [verificação](../../backend/maneja/verificacao.py).

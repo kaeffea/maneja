@@ -24,4 +24,4 @@ flowchart TD
     Q -- sim --> S[Verificação: divergente<br/>alerta ao técnico] --> F
 ```
 
-Código: `agente.gerar_plano`, `servico.aceitar` / `recusar`, `verificacao.verificar`.
+Código: [geração do plano](../../backend/maneja/agente.py), [decisão e execução em campo](../../backend/maneja/servico.py), [verificação](../../backend/maneja/verificacao.py) e [interface Campo](../../src/paginas/Campo.tsx).
