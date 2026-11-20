@@ -21,7 +21,7 @@ Papéis da Gestão de RH: GER Jackson · FRN João Pedro · BCK Kauê · MID Mar
 | SPEC-002 | Coleiras simuladas e ocupação estimada | Support | 4, 5 | Kauê → Maria Antônia (evolução) | Maria Antônia | 19/11 | ✅ feita |
 | SPEC-003 | Planejado × realizado | Core | 7, 9 | Kauê → José Felix (evolução) | José Felix | 19/11 | ✅ feita |
 | SPEC-004 | API REST (leitura, ações e simulador) | Generic | 2, 8 | Kauê | João Pedro | 19/11 | ✅ feita |
-| SPEC-005 | Gemini real escrevendo a explicação (com validador R3 e cota R7) | Core | 7 | Leandro | Kauê | 21/11 | a fazer |
+| SPEC-005 | Gemini real escrevendo a explicação (com validador R3 e cota R7) | Core | 7 | Leandro | Kauê | 21/11 | em revisão |
 | SPEC-006 | Clima real (Open-Meteo) com fallback | Support | 6 | Leo Lima | Maria Antônia | 21/11 | a fazer |
 | SPEC-007 | NDVI real (Sentinel-2) com fallback simulado | Support | 5 | Maria Antônia | Leo Lima | 23/11 | a fazer · opcional |
 | SPEC-008 | Persistência PostgreSQL | Generic | 2, 9 | Kauê | José Felix | 22/11 | ✅ feita |

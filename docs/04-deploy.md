@@ -31,6 +31,9 @@ navegador ──HTTPS──▶ maneja-web (Vercel, estático)      app.maneja.co
 | `MANEJA_CORS_ORIGENS` | os endereços do front, separados por vírgula: `https://maneja-web.vercel.app,https://app.maneja.com.br` |
 | `MANEJA_TOKEN_INTEGRACAO` | (opcional) token que o SeuGado usa em `/integracao/v1/*` |
 | `MANEJA_SEUGADO_MODO` | (opcional) `desligado` (padrão), `arquivo` ou `api` |
+| `MANEJA_GEMINI_API_KEY` | (opcional) chave do Google AI Studio. Sem ela, a explicação é o texto da regra |
+| `MANEJA_GEMINI_MODELO` | (opcional) padrão `gemini-3.5-flash-lite` |
+| `MANEJA_GEMINI_COTA_DIARIA` | (opcional) máximo de chamadas ao Gemini, padrão `50` |
 
 4. Faça o deploy e confira em `https://<api>/saude`. A resposta deve ser `{"status": "ok", "banco": "postgresql", "sem_estado": true, ...}`.
 
