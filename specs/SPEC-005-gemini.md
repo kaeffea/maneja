@@ -41,3 +41,16 @@ Funcionalidade: Gemini
 
 ## Fora do escopo
 O Gemini decidir destino. Chat livre com o usuário.
+
+## Como ficou
+- **Adaptador (`backend/maneja/adaptadores/llm.py`):** `GeminiLLM(chave, modelo, cliente_http)` faz o `POST` de R1 com timeout de 15 s. HTTP 429 vira `CotaEsgotada`. Outro erro HTTP, timeout, falha de conexão, JSON inválido ou resposta sem texto (bloqueio de segurança, `candidates` vazio) viram `RuntimeError`. As mensagens de erro não levam a URL, porque ela contém a chave.
+- **Montagem (`backend/maneja/config.py`):** `adaptador_llm(config)` devolve `None` sem `MANEJA_GEMINI_API_KEY` (ou com ela em branco) e `ControleDeCota(GeminiLLM(...), limite=MANEJA_GEMINI_COTA_DIARIA)` com ela. `montar_sistema` usa esse adaptador quando não recebe um `llm`. A chave não aparece no `repr` da `Config`.
+- **Modelo padrão:** `gemini-3.5-flash-lite`. Conferido na conta em 20/11/2026: `gemini-2.0-flash`, `gemini-1.5-flash` e `gemini-2.5-flash` respondem 404. Em teste real com a fazenda de demonstração, o `gemini-3.5-flash-lite` respondeu em cerca de 1 s e escreveu textos aceitos pelo validador R3. O `gemini-3.8-flash` passou dos 15 s em 2 de 3 tentativas, e o `gemini-3.5-flash` às vezes devolve markdown (`**`).
+- **Rodar local com o Gemini:** coloque as variáveis em `backend/.env` (já ignorado pelo git) e rode `uv run --env-file .env uvicorn maneja.api:app --reload`. O backend não lê `.env` sozinho.
+
+## Limitações conhecidas (para decidir em outra spec)
+- O `ControleDeCota` conta chamadas desde que o sistema subiu e não zera à meia-noite.
+- No modo sem estado (Vercel), o sistema é montado a cada requisição, então o contador recomeça a cada `POST /plano`. Na prática, o limite fica valendo por plano, e quem segura a cota real é o 429 do Google, que já cai no texto da regra.
+
+## Situação
+Implementada em 20/11 (Leandro), em revisão (Kauê). Os 3 cenários de `backend/features/gemini.feature` e mais 32 testes em `backend/tests/test_gemini.py` estão passando, e `uv run pytest` está verde com 74 testes, também com a rede externa bloqueada. Testada também com o Gemini real.
