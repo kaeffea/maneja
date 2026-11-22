@@ -24,6 +24,7 @@ flowchart TB
         REP[(Repositorio<br/>memória / PostgreSQL)]
         COL[Coleiras<br/>adaptadores/coleiras.py]
         CLI[Clima<br/>adaptadores/clima.py]
+        SAT[Satélite<br/>adaptadores/satelite.py]
         LLM[LLM / Gemini<br/>adaptadores/llm.py]
         SG[SeuGado<br/>adaptadores/seugado.py]
     end
@@ -34,6 +35,7 @@ flowchart TB
     AG -- ILLM --> LLM
     VER -- ISeuGado --> SG
     MON -- IColeiras --> COL
+    MON -- ISatelite --> SAT
     AG & VER & MON & CAD & DASH --> REP
 ```
 
@@ -44,3 +46,5 @@ flowchart TB
 | Monitoramento | support | `ocupacao`, `resumo_piquetes` | coleiras, repositório |
 | Cadastros | support | piquete, lotação | repositório |
 | Adaptadores | infra | ISatelite, IClima, ILLM, IColeiras, ISeuGado | serviço externo ou simulação |
+
+Código: [montagem dos componentes](../../backend/maneja/config.py), [serviço de aplicação](../../backend/maneja/servico.py) e [adaptadores](../../backend/maneja/adaptadores/).

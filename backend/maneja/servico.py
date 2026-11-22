@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from . import agente as agente_mod
 from .adaptadores.coleiras import SimuladorColeiras
 from .adaptadores.seugado import ISeuGado, SeuGadoDesligado
+from .adaptadores.satelite import ISatelite, SateliteSimulado
 from .datas import hoje_na_fazenda
 from .dominio import (
     CATEGORIAS,
@@ -65,10 +66,31 @@ class Relogio:
 
 class Sistema:
     def __init__(self, repo: RepositorioMemoria, clima, simulador: SimuladorColeiras, relogio: Relogio,
-                 llm=None, seugado: ISeuGado | None = None) -> None:
+                 llm=None, seugado: ISeuGado | None = None, satelite: ISatelite | None = None) -> None:
         self.repo, self.clima, self.simulador, self.relogio = repo, clima, simulador, relogio
         self.llm = llm
         self.seugado = seugado or SeuGadoDesligado()
+        self.satelite = satelite or SateliteSimulado()
+
+    def atualizar_ndvi(self) -> dict:
+        hoje = self.hoje()
+        existentes = {l.piquete_id for l in self.repo.ndvi if l.data == hoje}
+        novas = []
+        indisponiveis = []
+        for piquete in self.repo.piquetes:
+            if piquete.id in existentes:
+                continue
+            try:
+                leitura = self.satelite.ndvi(piquete, hoje)
+            except Exception:  # O histórico segue disponível durante falhas do provedor.
+                indisponiveis.append(piquete.id)
+                continue
+            if leitura is not None:
+                novas.append(leitura)
+        if novas:
+            self.repo.ndvi.extend(novas)
+            self.persistir()
+        return {"leituras": novas, "indisponiveis": indisponiveis}
 
     def persistir(self) -> None:
         salvar = getattr(self.repo, "salvar", None)
@@ -87,7 +109,9 @@ class Sistema:
 
     # ---------- leitura ----------
     def previsao(self) -> PrevisaoClima:
-        lat, lon = centro(self.repo.piquetes[0].geometria) if self.repo.piquetes else (0.0, 0.0)
+        centros = [centro(piquete.geometria) for piquete in self.repo.piquetes]
+        lat = sum(p[0] for p in centros) / len(centros) if centros else 0.0
+        lon = sum(p[1] for p in centros) / len(centros) if centros else 0.0
         return self.clima.previsao(self.repo.fazenda.id, lat, lon, self.hoje())
 
     def resumo(self) -> list[ResumoPiquete]:

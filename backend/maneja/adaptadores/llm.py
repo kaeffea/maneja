@@ -1,27 +1,16 @@
-"""Modelos de linguagem: o Gemini real (SPEC-005) e as versões sem rede usadas nos testes."""
+"""Modelos de linguagem usados para explicar as movimentações: o Gemini real (SPEC-005) e as versões sem rede."""
 
 from __future__ import annotations
+
+from datetime import date
+from threading import Lock
 
 import httpx
 
 from ..dominio import CotaEsgotada
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
-# A SPEC-005 sugeria gemini-2.0-flash, que a conta já não oferece (404, conferido em 20/11/2026).
-# O flash-lite responde em ~1 s; os flash maiores pensam antes e às vezes passam dos 15 s.
-GEMINI_MODELO_PADRAO = "gemini-3.5-flash-lite"
-GEMINI_COTA_DIARIA_PADRAO = 50  # chamadas por dia (SPEC-005, risco R7)
 GEMINI_TIMEOUT_S = 15  # SPEC-005
-
-
-class LLMFixo:
-    """Responde sempre o mesmo texto. Usado nos testes do validador (risco R3)."""
-
-    def __init__(self, resposta: str) -> None:
-        self.resposta = resposta
-
-    def gerar_texto(self, prompt: str) -> str:
-        return self.resposta
 
 
 class GeminiLLM:
@@ -31,7 +20,7 @@ class GeminiLLM:
     fica com o texto da regra. As mensagens de erro não levam a URL, que contém a chave.
     """
 
-    def __init__(self, chave: str, modelo: str = GEMINI_MODELO_PADRAO, cliente_http: httpx.Client | None = None) -> None:
+    def __init__(self, chave: str, modelo: str, cliente_http: httpx.Client | None = None) -> None:
         self._chave, self.modelo = chave, modelo
         self._http = cliente_http or httpx.Client(timeout=GEMINI_TIMEOUT_S)
 
@@ -60,14 +49,30 @@ class GeminiLLM:
         return texto
 
 
+class LLMFixo:
+    """Responde sempre o mesmo texto. Usado nos testes do validador (risco R3)."""
+
+    def __init__(self, resposta: str) -> None:
+        self.resposta = resposta
+
+    def gerar_texto(self, prompt: str) -> str:
+        return self.resposta
+
+
 class ControleDeCota:
-    """Risco R7: conta as chamadas e lança CotaEsgotada ao passar do limite."""
+    """Risco R7: conta as chamadas do dia e lança CotaEsgotada ao passar do limite."""
 
     def __init__(self, llm, limite: int) -> None:
         self._llm, self.limite, self.usado = llm, limite, 0
+        self._dia = date.today()
+        self._trava = Lock()
 
     def gerar_texto(self, prompt: str) -> str:
-        if self.usado >= self.limite:
-            raise CotaEsgotada(f"cota de {self.limite} chamadas esgotada")
-        self.usado += 1
+        with self._trava:
+            dia = date.today()
+            if dia != self._dia:
+                self._dia, self.usado = dia, 0
+            if self.usado >= self.limite:
+                raise CotaEsgotada(f"cota de {self.limite} chamadas esgotada")
+            self.usado += 1
         return self._llm.gerar_texto(prompt)

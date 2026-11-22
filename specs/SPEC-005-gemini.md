@@ -17,7 +17,7 @@ O agente (SPEC-001) já decide por regras e aceita um `llm` com `gerar_texto(pro
 - **R4.** Os testes nunca chamam a rede: o `cliente_http` é injetado (use `httpx.MockTransport`).
 
 ## Constantes
-Modelo padrão `gemini-2.0-flash` (conferir o nome disponível na conta), cota diária padrão 50.
+Modelo padrão `gemini-3.1-flash-lite`, substituindo o Gemini 2.0 Flash após sua desativação. O modelo pode ser configurado conforme o acesso da conta. Cota diária padrão de 50 por instância da aplicação. [Referência de modelos e desativações do Google](https://ai.google.dev/gemini-api/docs/deprecations).
 
 ## Cenários (BDD)
 ```gherkin
@@ -44,13 +44,13 @@ O Gemini decidir destino. Chat livre com o usuário.
 
 ## Como ficou
 - **Adaptador (`backend/maneja/adaptadores/llm.py`):** `GeminiLLM(chave, modelo, cliente_http)` faz o `POST` de R1 com timeout de 15 s. HTTP 429 vira `CotaEsgotada`. Outro erro HTTP, timeout, falha de conexão, JSON inválido ou resposta sem texto (bloqueio de segurança, `candidates` vazio) viram `RuntimeError`. As mensagens de erro não levam a URL, porque ela contém a chave.
-- **Montagem (`backend/maneja/config.py`):** `adaptador_llm(config)` devolve `None` sem `MANEJA_GEMINI_API_KEY` (ou com ela em branco) e `ControleDeCota(GeminiLLM(...), limite=MANEJA_GEMINI_COTA_DIARIA)` com ela. `montar_sistema` usa esse adaptador quando não recebe um `llm`. A chave não aparece no `repr` da `Config`.
-- **Modelo padrão:** `gemini-3.5-flash-lite`. Conferido na conta em 20/11/2026: `gemini-2.0-flash`, `gemini-1.5-flash` e `gemini-2.5-flash` respondem 404. Em teste real com a fazenda de demonstração, o `gemini-3.5-flash-lite` respondeu em cerca de 1 s e escreveu textos aceitos pelo validador R3. O `gemini-3.8-flash` passou dos 15 s em 2 de 3 tentativas, e o `gemini-3.5-flash` às vezes devolve markdown (`**`).
+- **Cota (R7):** o `ControleDeCota` zera o contador na virada do dia e usa uma trava para requisições simultâneas. `Config.llm` é uma `cached_property`, então no modo sem estado (Vercel) o mesmo contador vale para todas as requisições da instância.
+- **Montagem (`backend/maneja/config.py`):** sem `MANEJA_GEMINI_API_KEY` (ou com ela em branco), `Config.llm` é `None` e a explicação vem da regra. Com a chave, `Config.llm` é `ControleDeCota(GeminiLLM(...), MANEJA_GEMINI_COTA_DIARIA)`. Variáveis vazias usam os padrões, e a chave não aparece no `repr` da `Config`.
+- **Modelo:** conferido na conta em 20/11 e 22/11/2026. `gemini-1.5-flash`, `gemini-2.0-flash` e `gemini-2.5-flash` respondem 404. Com a fazenda de demonstração, `gemini-3.1-flash-lite` e `gemini-3.5-flash-lite` escreveram textos aceitos pelo validador R3 em 2 a 6 s na maioria das vezes. Nos horários de pico, algumas chamadas passaram dos 15 s e o plano saiu com o texto da regra, como previsto em R2.
 - **Rodar local com o Gemini:** coloque as variáveis em `backend/.env` (já ignorado pelo git) e rode `uv run --env-file .env uvicorn maneja.api:app --reload`. O backend não lê `.env` sozinho.
 
-## Limitações conhecidas (para decidir em outra spec)
-- O `ControleDeCota` conta chamadas desde que o sistema subiu e não zera à meia-noite.
-- No modo sem estado (Vercel), o sistema é montado a cada requisição, então o contador recomeça a cada `POST /plano`. Na prática, o limite fica valendo por plano, e quem segura a cota real é o 429 do Google, que já cai no texto da regra.
+## Limitações conhecidas
+- A cota é por instância e fica em memória. Com várias instâncias na Vercel, cada uma tem o seu contador, e quem segura a cota real é o 429 do Google, que já cai no texto da regra.
 
 ## Situação
-Implementada em 20/11 (Leandro), em revisão (Kauê). Os 3 cenários de `backend/features/gemini.feature` e mais 32 testes em `backend/tests/test_gemini.py` estão passando, e `uv run pytest` está verde com 74 testes, também com a rede externa bloqueada. Testada também com o Gemini real.
+Implementada em 20/11 (Leandro) e integrada ao `main` em 22/11 (junto com a versão do PR #1). Em revisão (Kauê). Os 3 cenários de `backend/features/gemini.feature`, os 4 exemplos do Gemini em `integracoes.feature` e mais 35 testes em `backend/tests/test_gemini.py` estão passando, e `uv run pytest` está verde com 90 testes, também com a rede externa bloqueada. Testada também com o Gemini real.

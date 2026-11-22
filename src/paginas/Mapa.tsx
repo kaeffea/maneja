@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "@geoman-io/leaflet-geoman-free";
 import { dataComDia, dataCurta, decimal } from "../lib/datas";
 import { useFazenda } from "../lib/fazenda";
+import { api, mensagemDeErro } from "../lib/api";
 import { centro } from "../lib/geo";
 import { descreverRebanho, totalAnimais } from "../lib/rebanho";
 import { corDoNdvi, NDVI_ESCALA_MAX, NDVI_ESCALA_MIN, resumoPiquetes } from "../lib/ndvi";
-import type { GeoJsonPolygon, Piquete, ResumoPiquete } from "../lib/tipos";
+import type { Coleira, GeoJsonPolygon, Piquete, ResumoPiquete } from "../lib/tipos";
 import "./Mapa.css";
 
 // O Leaflet pinta em SVG e não entende var(--x): lemos o valor da variável do tema.
@@ -108,7 +109,20 @@ function BuscaCoordenadas() {
 // ---------- página ----------
 
 export default function Mapa() {
-  const { estado, hoje, criarPiquete, atualizarGeometria, desativarPiquete } = useFazenda();
+  const { estado, hoje, modo, criarPiquete, atualizarGeometria, desativarPiquete } = useFazenda();
+  const [mostrarColeiras, setMostrarColeiras] = useState(false);
+  const [coleiras, setColeiras] = useState<Coleira[]>([]);
+  const [erroColeiras, setErroColeiras] = useState("");
+
+  useEffect(() => {
+    if (!mostrarColeiras || modo !== "api") return;
+    let ativo = true;
+    api.coleiras().then(
+      (dados) => { if (ativo) setColeiras(dados); },
+      (falha: unknown) => { if (ativo) setErroColeiras(mensagemDeErro(falha)); },
+    );
+    return () => { ativo = false; };
+  }, [mostrarColeiras, modo]);
   const piquetes = estado.piquetes;
   const resumos = resumoPiquetes(piquetes, estado.ndvi, estado.lotacao, hoje);
   const plano = estado.plano;
@@ -242,6 +256,23 @@ export default function Mapa() {
               </Polyline>
             );
           })}
+          {mostrarColeiras && coleiras.map((coleira) => {
+            const posicao = coleira.ultima_posicao;
+            if (!posicao) return null;
+            const cores: Record<string, string> = {
+              boi: "--cor-primaria", vaca: "--cor-destaque", bezerro: "--cor-ocupado",
+            };
+            const cor = corDoTema(cores[coleira.categoria] ?? "--cor-texto");
+            const divergente = coleira.piquete_observado_id !== coleira.piquete_cadastro_id;
+            const cadastro = estado.piquetes.find((p) => p.id === coleira.piquete_cadastro_id);
+            return (
+              <CircleMarker key={coleira.id} center={[posicao.lat, posicao.lon]} radius={6}
+                pathOptions={{ color: corDoTema(divergente ? "--cor-erro" : "--cor-superficie"),
+                  fillColor: cor, fillOpacity: 1, weight: 2 }}>
+                <Tooltip>{coleira.id} · {coleira.categoria} · Cadastro: {cadastro?.nome ?? "Sem piquete"}</Tooltip>
+              </CircleMarker>
+            );
+          })}
         </MapContainer>
 
         <div className="legenda-mapa">
@@ -256,6 +287,13 @@ export default function Mapa() {
       </div>
 
       <div className="painel-lateral">
+        {modo === "api" && <label>
+          <input type="checkbox" checked={mostrarColeiras} onChange={(evento) => {
+            setErroColeiras("");
+            setMostrarColeiras(evento.target.checked);
+          }} /> Mostrar coleiras GPS
+        </label>}
+        {mostrarColeiras && erroColeiras && <p role="alert">{erroColeiras}</p>}
         {erro ? <div className="mensagem-erro" role="alert">{erro}</div> : null}
 
         {novaGeometria ? (

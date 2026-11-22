@@ -1,20 +1,16 @@
 """SPEC-005 · Gemini real escrevendo a explicação. Nenhum teste chama a rede (R4)."""
 
 import json
+from datetime import date, timedelta
 
 import httpx
 import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from conftest import sistema, sistema_demo
-from maneja.adaptadores.llm import (
-    GEMINI_COTA_DIARIA_PADRAO,
-    GEMINI_MODELO_PADRAO,
-    GEMINI_TIMEOUT_S,
-    ControleDeCota,
-    GeminiLLM,
-)
-from maneja.config import Config, adaptador_llm, montar_sistema
+from maneja.adaptadores import llm as llm_mod
+from maneja.adaptadores.llm import GEMINI_TIMEOUT_S, ControleDeCota, GeminiLLM
+from maneja.config import COTA_GEMINI_PADRAO, MODELO_GEMINI_PADRAO, Config, montar_sistema
 from maneja.dominio import CotaEsgotada
 
 scenarios("gemini.feature")
@@ -26,7 +22,7 @@ def resposta_gemini(texto: str) -> dict:
     return {"candidates": [{"content": {"parts": [{"text": texto}], "role": "model"}, "finishReason": "STOP"}]}
 
 
-def gemini_falso(responder, chamadas: list | None = None, modelo: str = GEMINI_MODELO_PADRAO) -> GeminiLLM:
+def gemini_falso(responder, chamadas: list | None = None, modelo: str = MODELO_GEMINI_PADRAO) -> GeminiLLM:
     """GeminiLLM com o HTTP trocado por um MockTransport; `chamadas` guarda as requisições feitas."""
     chamadas = [] if chamadas is None else chamadas
 
@@ -43,14 +39,14 @@ def gemini_falso(responder, chamadas: list | None = None, modelo: str = GEMINI_M
 def gemini_responde(ctx, texto):
     ctx["texto_gemini"], ctx["chamadas"] = texto, []
     llm = gemini_falso(lambda r: httpx.Response(200, json=resposta_gemini(texto)), ctx["chamadas"])
-    sistema(ctx).llm = ControleDeCota(llm, limite=GEMINI_COTA_DIARIA_PADRAO)
+    sistema(ctx).llm = ControleDeCota(llm, limite=COTA_GEMINI_PADRAO)
 
 
 @given(parsers.parse("um Gemini que responde com erro {status:d}"))
 def gemini_com_erro(ctx, status):
     ctx["chamadas"] = []
     llm = gemini_falso(lambda r: httpx.Response(status, json={"error": {"code": status}}), ctx["chamadas"])
-    sistema(ctx).llm = ControleDeCota(llm, limite=GEMINI_COTA_DIARIA_PADRAO)
+    sistema(ctx).llm = ControleDeCota(llm, limite=COTA_GEMINI_PADRAO)
 
 
 @given(parsers.parse("um Gemini com cota de {limite:d} chamadas"))
@@ -99,7 +95,7 @@ def test_monta_a_requisicao_da_api_do_gemini():
 
 def test_timeout_padrao_e_15_segundos():
     assert GEMINI_TIMEOUT_S == 15
-    assert GeminiLLM(CHAVE)._http.timeout.read == 15
+    assert GeminiLLM(CHAVE, MODELO_GEMINI_PADRAO)._http.timeout.read == 15
 
 
 # ---------- R2: falhas viram exceção ----------
@@ -163,7 +159,7 @@ def test_gemini_fora_do_ar_por_timeout_nao_derruba_o_plano():
         raise httpx.ReadTimeout("falhou", request=request)
 
     s = sistema_demo()
-    s.llm = ControleDeCota(gemini_falso(falhar), limite=GEMINI_COTA_DIARIA_PADRAO)
+    s.llm = ControleDeCota(gemini_falso(falhar), limite=COTA_GEMINI_PADRAO)
     mov = s.gerar_plano().movimentacoes[0]
     assert (mov.explicacao_origem, mov.explicacao) == ("regra", mov.motivo)
 
@@ -171,7 +167,7 @@ def test_gemini_fora_do_ar_por_timeout_nao_derruba_o_plano():
 def test_texto_do_gemini_que_nao_cita_origem_e_destino_e_descartado():
     s = sistema_demo()
     llm = gemini_falso(lambda r: httpx.Response(200, json=resposta_gemini("Mantenha o gado onde está.")))
-    s.llm = ControleDeCota(llm, limite=GEMINI_COTA_DIARIA_PADRAO)
+    s.llm = ControleDeCota(llm, limite=COTA_GEMINI_PADRAO)
     assert s.gerar_plano().movimentacoes[0].explicacao_origem == "regra"
 
 
@@ -186,6 +182,21 @@ def test_cota_esgotada_nao_chama_o_gemini():
     assert len(chamadas) == 2
 
 
+def test_cota_volta_no_dia_seguinte(monkeypatch):
+    class Amanha(date):
+        @classmethod
+        def today(cls):
+            return date.today() + timedelta(days=1)
+
+    llm = ControleDeCota(gemini_falso(lambda r: httpx.Response(200, json=resposta_gemini("ok"))), limite=1)
+    llm.gerar_texto("a")
+    with pytest.raises(CotaEsgotada):
+        llm.gerar_texto("b")
+    monkeypatch.setattr(llm_mod, "date", Amanha)
+    assert llm.gerar_texto("c") == "ok"
+    assert llm.usado == 1
+
+
 # ---------- R3: montagem pelo ambiente ----------
 
 @pytest.fixture
@@ -197,21 +208,21 @@ def sem_gemini_no_ambiente(monkeypatch):
 
 def test_sem_chave_o_sistema_sobe_sem_llm(sem_gemini_no_ambiente):
     config = Config.do_ambiente()
-    assert config.gemini_api_key == ""
-    assert adaptador_llm(config) is None
+    assert config.gemini_chave == ""
+    assert config.llm is None
     assert montar_sistema(Config(perda_sinal=0.0, semente=7)).llm is None
 
 
 def test_chave_em_branco_conta_como_sem_chave(sem_gemini_no_ambiente):
     sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_API_KEY", "   ")
-    assert adaptador_llm(Config.do_ambiente()) is None
+    assert Config.do_ambiente().llm is None
 
 
 def test_com_chave_usa_gemini_com_controle_de_cota(sem_gemini_no_ambiente):
     sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_API_KEY", CHAVE)
     sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_MODELO", "gemini-teste")
     sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_COTA_DIARIA", "7")
-    llm = adaptador_llm(Config.do_ambiente())
+    llm = Config.do_ambiente().llm
     assert isinstance(llm, ControleDeCota)
     assert llm.limite == 7
     assert isinstance(llm._llm, GeminiLLM)
@@ -221,19 +232,31 @@ def test_com_chave_usa_gemini_com_controle_de_cota(sem_gemini_no_ambiente):
 def test_padroes_de_modelo_e_cota(sem_gemini_no_ambiente):
     sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_API_KEY", CHAVE)
     config = Config.do_ambiente()
-    assert (config.gemini_modelo, config.gemini_cota_diaria) == (GEMINI_MODELO_PADRAO, GEMINI_COTA_DIARIA_PADRAO)
-    assert GEMINI_COTA_DIARIA_PADRAO == 50
+    assert (config.gemini_modelo, config.gemini_cota_diaria) == (MODELO_GEMINI_PADRAO, COTA_GEMINI_PADRAO)
+    assert COTA_GEMINI_PADRAO == 50
+
+
+def test_variaveis_vazias_usam_os_padroes(sem_gemini_no_ambiente):
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_MODELO", "")
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_COTA_DIARIA", "")
+    config = Config.do_ambiente()
+    assert (config.gemini_modelo, config.gemini_cota_diaria) == (MODELO_GEMINI_PADRAO, COTA_GEMINI_PADRAO)
+
+
+def test_a_cota_vale_para_a_instancia_e_nao_por_requisicao():
+    config = Config(perda_sinal=0.0, semente=7, gemini_chave=CHAVE)
+    assert montar_sistema(config).llm is montar_sistema(config).llm  # modo sem estado monta a cada requisição
 
 
 def test_montar_sistema_com_chave_liga_o_gemini_sem_chamar_a_rede():
-    s = montar_sistema(Config(perda_sinal=0.0, semente=7, gemini_api_key=CHAVE))
+    s = montar_sistema(Config(perda_sinal=0.0, semente=7, gemini_chave=CHAVE))
     assert isinstance(s.llm, ControleDeCota) and s.llm.usado == 0
 
 
 def test_llm_passado_explicitamente_tem_prioridade():
     fixo = ControleDeCota(gemini_falso(lambda r: httpx.Response(500)), limite=1)
-    assert montar_sistema(Config(perda_sinal=0.0, semente=7, gemini_api_key=CHAVE), llm=fixo).llm is fixo
+    assert montar_sistema(Config(perda_sinal=0.0, semente=7, gemini_chave=CHAVE), llm=fixo).llm is fixo
 
 
 def test_chave_nao_aparece_no_repr_da_config():
-    assert CHAVE not in repr(Config(gemini_api_key=CHAVE))
+    assert CHAVE not in repr(Config(gemini_chave=CHAVE))

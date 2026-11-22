@@ -31,9 +31,10 @@ navegador ──HTTPS──▶ maneja-web (Vercel, estático)      app.maneja.co
 | `MANEJA_CORS_ORIGENS` | os endereços do front, separados por vírgula: `https://maneja-web.vercel.app,https://app.maneja.com.br` |
 | `MANEJA_TOKEN_INTEGRACAO` | (opcional) token que o SeuGado usa em `/integracao/v1/*` |
 | `MANEJA_SEUGADO_MODO` | (opcional) `desligado` (padrão), `arquivo` ou `api` |
-| `MANEJA_GEMINI_API_KEY` | (opcional) chave do Google AI Studio. Sem ela, a explicação é o texto da regra |
-| `MANEJA_GEMINI_MODELO` | (opcional) padrão `gemini-3.5-flash-lite` |
-| `MANEJA_GEMINI_COTA_DIARIA` | (opcional) máximo de chamadas ao Gemini, padrão `50` |
+| `MANEJA_SEUGADO_URL`, `MANEJA_SEUGADO_EMAIL`, `MANEJA_SEUGADO_SENHA`, `MANEJA_SEUGADO_FAZENDA_ID` | necessárias no modo `api` |
+| `MANEJA_CLIMA` | `simulado` (padrão) ou `open-meteo` |
+| `MANEJA_GEMINI_API_KEY`, `MANEJA_GEMINI_MODELO`, `MANEJA_GEMINI_COTA_DIARIA` | opcionais. Sem chave, o texto vem da regra. Configure um modelo habilitado na conta. O limite diário em memória é por instância da API |
+| `MANEJA_CDSE_CLIENT_ID`, `MANEJA_CDSE_CLIENT_SECRET` | opcionais. Com ambos, `POST /ndvi/atualizar` consulta o Sentinel-2. A série anterior permanece disponível |
 
 4. Faça o deploy e confira em `https://<api>/saude`. A resposta deve ser `{"status": "ok", "banco": "postgresql", "sem_estado": true, ...}`.
 
@@ -44,6 +45,7 @@ navegador ──HTTPS──▶ maneja-web (Vercel, estático)      app.maneja.co
 1. Importe o mesmo repositório de novo, como outro projeto.
 2. **Root Directory: `.`** (a raiz). Framework: Vite. Build: `npm run build`. Saída: `dist`.
 3. Variável: `VITE_API_URL` = o endereço da API (`https://maneja-api.vercel.app` ou `https://api.maneja.com.br`).
+   Em uma implantação dedicada à apresentação, defina também `VITE_MODO_DEMO=1` para mostrar o simulador em **Campo**.
 4. O `vercel.json` da raiz faz o rewrite das rotas do React (`/mapa`, `/plano`...) para `index.html`.
 
 ## 4. Domínio (opcional)
