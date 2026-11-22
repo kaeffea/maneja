@@ -1,0 +1,1187 @@
+{
+ "descricao": "Conjunto-ouro do agente de manejo (critério de qualidade do pacote 1.1). Cada caso traz a entrada e o gabarito do que é plausível. Fonte: specs/SPEC-016-conjunto-ouro.md",
+ "hoje": "2026-11-22",
+ "piquetes": [
+  {
+   "id": "abobora",
+   "nome": "Piquete Abóbora",
+   "area_ha": 5.14
+  },
+  {
+   "id": "jerimum",
+   "nome": "Piquete Jerimum",
+   "area_ha": 2.86
+  },
+  {
+   "id": "macarrao",
+   "nome": "Piquete Macarrão",
+   "area_ha": 8.2
+  },
+  {
+   "id": "feijao",
+   "nome": "Piquete Feijão",
+   "area_ha": 4.73
+  },
+  {
+   "id": "milho",
+   "nome": "Piquete Milho",
+   "area_ha": 6.25
+  }
+ ],
+ "idade_ndvi_padrao_dias": 2,
+ "casos": [
+  {
+   "id": "C01",
+   "titulo": "Fazenda de demonstração: Abóbora esgotado",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ],
+    "milho": [
+     0,
+     18,
+     10
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Abóbora está esgotado. Jerimum tem mais pasto, mas é pequeno para 20 UA. Macarrão é o melhor que comporta o rebanho."
+  },
+  {
+   "id": "C02",
+   "titulo": "Pasto ainda bom não move",
+   "ndvi": {
+    "abobora": 0.55,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": []
+   },
+   "justificativa": "Com NDVI 0,55 o pasto ainda sustenta o rebanho. Mover agora só encurtaria o descanso dos outros."
+  },
+  {
+   "id": "C03",
+   "titulo": "No limite de saída (0,35) fica",
+   "ndvi": {
+    "abobora": 0.35,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": []
+   },
+   "justificativa": "Está no limite. Ficar mais alguns dias é aceitável e evita mudar cedo demais."
+  },
+  {
+   "id": "C04",
+   "titulo": "Logo abaixo do limite (0,34) sai",
+   "ndvi": {
+    "abobora": 0.34,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao",
+       "feijao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Pasto já abaixo do ponto de saída. Qualquer piquete descansado que comporte o rebanho serve."
+  },
+  {
+   "id": "C05",
+   "titulo": "Rebanho pequeno cabe no melhor piquete",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     5,
+     0,
+     0
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "jerimum"
+      ]
+     }
+    ]
+   },
+   "justificativa": "5 UA cabem no Jerimum, que tem o melhor pasto."
+  },
+  {
+   "id": "C06",
+   "titulo": "Todos os livres ainda em recuperação",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.42,
+    "macarrao": 0.45,
+    "feijao": 0.4,
+    "milho": 0.48
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [],
+    "sem_destino": [
+     "abobora"
+    ]
+   },
+   "justificativa": "Nenhum piquete livre recuperou. Mandar o gado só esgotaria outro piquete: o certo é avisar para suplementar."
+  },
+  {
+   "id": "C07",
+   "titulo": "Único livre degradado",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.31,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ],
+    "jerimum": [
+     3,
+     0,
+     0
+    ],
+    "macarrao": [
+     10,
+     0,
+     0
+    ],
+    "milho": [
+     0,
+     18,
+     10
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [],
+    "sem_destino": [
+     "abobora"
+    ]
+   },
+   "justificativa": "O único piquete livre (Feijão) também está ruim."
+  },
+  {
+   "id": "C08",
+   "titulo": "Rebanho grande demais para qualquer piquete",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     40,
+     15,
+     10
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [],
+    "sem_destino": [
+     "abobora"
+    ]
+   },
+   "justificativa": "59 UA não cabem nem no Macarrão (máx. 49 UA). Melhor avisar para dividir o lote."
+  },
+  {
+   "id": "C09",
+   "titulo": "Dois rebanhos saem, cada um para um piquete",
+   "ndvi": {
+    "abobora": 0.25,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.3
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ],
+    "milho": [
+     0,
+     18,
+     10
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     },
+     {
+      "origem": "milho",
+      "destinos": [
+       "feijao",
+       "macarrao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Os dois piquetes estão esgotados. O pior escolhe primeiro (Macarrão) e o outro vai para o próximo bom que comporta (Feijão)."
+  },
+  {
+   "id": "C10",
+   "titulo": "Dois rebanhos, um só destino bom",
+   "ndvi": {
+    "abobora": 0.25,
+    "jerimum": 0.4,
+    "macarrao": 0.76,
+    "feijao": 0.45,
+    "milho": 0.3
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ],
+    "milho": [
+     0,
+     18,
+     10
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     }
+    ],
+    "sem_destino": [
+     "milho"
+    ]
+   },
+   "justificativa": "Só o Macarrão está pronto. O pior piquete tem prioridade; o outro rebanho precisa de alerta."
+  },
+  {
+   "id": "C11",
+   "titulo": "Rota recusada há 2 dias não volta",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "recusas": [
+    {
+     "origem": "abobora",
+     "destino": "macarrao",
+     "dias_atras": 2
+    }
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "feijao",
+       "milho"
+      ]
+     }
+    ]
+   },
+   "justificativa": "O produtor recusou o Macarrão há 2 dias. Insistir seria ignorar a decisão dele."
+  },
+  {
+   "id": "C12",
+   "titulo": "Recusa antiga (10 dias) não bloqueia",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "recusas": [
+    {
+     "origem": "abobora",
+     "destino": "macarrao",
+     "dias_atras": 10
+    }
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "A recusa já tem mais de uma semana; a situação mudou."
+  },
+  {
+   "id": "C13",
+   "titulo": "Chuva forte hoje adia para amanhã",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    55,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ],
+      "dia": 1
+     }
+    ]
+   },
+   "justificativa": "Não se move gado sob chuva forte. Amanhã o tempo melhora."
+  },
+  {
+   "id": "C14",
+   "titulo": "Três dias de chuva forte",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    45,
+    60,
+    42,
+    10,
+    0,
+    0,
+    0
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ],
+      "dia": 3
+     }
+    ]
+   },
+   "justificativa": "Mover no primeiro dia sem chuva forte."
+  },
+  {
+   "id": "C15",
+   "titulo": "Chuva forte a semana toda",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    50,
+    48,
+    60,
+    45,
+    41,
+    55,
+    70
+   ],
+   "esperado": {
+    "movimentos": [],
+    "sem_destino": []
+   },
+   "justificativa": "Não há dia seguro para mover. O plausível é não marcar movimentação sob chuva forte e esperar a próxima previsão."
+  },
+  {
+   "id": "C16",
+   "titulo": "Semana seca ainda permite sair",
+   "ndvi": {
+    "abobora": 0.31,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Seca não impede a saída de um piquete esgotado; só o rebrote fica mais lento."
+  },
+  {
+   "id": "C17",
+   "titulo": "Melhor NDVI com leitura de 40 dias",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.4,
+    "macarrao": 0.8,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "idade_ndvi_dias": {
+    "macarrao": 40
+   },
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "feijao",
+       "milho"
+      ]
+     }
+    ]
+   },
+   "justificativa": "A leitura do Macarrão tem 40 dias: o pasto pode ter mudado. Pelo critério 1.1.1 só vale leitura de até 7 dias. Feijão tem leitura recente."
+  },
+  {
+   "id": "C18",
+   "titulo": "Melhor piquete sem leitura",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "feijao",
+       "milho"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Sem leitura do Macarrão não dá para saber o pasto; escolher entre os conhecidos."
+  },
+  {
+   "id": "C19",
+   "titulo": "Origem sem leitura de NDVI",
+   "ndvi": {
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": []
+   },
+   "justificativa": "Sem dado do piquete ocupado não há base para mandar sair."
+  },
+  {
+   "id": "C20",
+   "titulo": "Origem com leitura velha (30 dias)",
+   "ndvi": {
+    "abobora": 0.2,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "idade_ndvi_dias": {
+    "abobora": 30
+   },
+   "esperado": {
+    "movimentos": []
+   },
+   "justificativa": "A leitura do Abóbora tem 30 dias. Pelo critério 1.1.1 o piquete fica fora da análise e deve ser sinalizado, não movido às cegas."
+  },
+  {
+   "id": "C21",
+   "titulo": "Livre passando do ponto recebe o gado",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.4,
+    "macarrao": 0.76,
+    "feijao": 0.86,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "feijao",
+       "macarrao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Aproveitar o Feijão, que está passando do ponto, ou o Macarrão: os dois servem."
+  },
+  {
+   "id": "C22",
+   "titulo": "Nenhum piquete ocupado",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {},
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": []
+   },
+   "justificativa": "Sem gado no pasto, não há o que mover."
+  },
+  {
+   "id": "C23",
+   "titulo": "Linha de lotação zerada",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     0,
+     0,
+     0
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": []
+   },
+   "justificativa": "Piquete com zero animais está livre."
+  },
+  {
+   "id": "C24",
+   "titulo": "Só bezerros (8 UA)",
+   "ndvi": {
+    "abobora": 0.3,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     0,
+     0,
+     20
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "jerimum"
+      ]
+     }
+    ]
+   },
+   "justificativa": "20 bezerros equivalem a 8 UA e cabem no Jerimum, o melhor pasto."
+  },
+  {
+   "id": "C25",
+   "titulo": "Empate entre destinos",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.4,
+    "macarrao": 0.7,
+    "feijao": 0.63,
+    "milho": 0.7
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao",
+       "milho"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Com o mesmo NDVI, os dois são plausíveis."
+  },
+  {
+   "id": "C26",
+   "titulo": "Piquete bom já ocupado não recebe",
+   "ndvi": {
+    "abobora": 0.28,
+    "jerimum": 0.75,
+    "macarrao": 0.7,
+    "feijao": 0.3,
+    "milho": 0.8
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ],
+    "feijao": [
+     10,
+     0,
+     0
+    ],
+    "milho": [
+     0,
+     18,
+     10
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     },
+     {
+      "origem": "feijao",
+      "destinos": [
+       "jerimum"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Milho está ocupado e fica. Abóbora (20 UA) vai para o Macarrão; Feijão (10 UA) cabe no Jerimum."
+  },
+  {
+   "id": "C27",
+   "titulo": "Destino exatamente no mínimo (0,50)",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.4,
+    "macarrao": 0.5,
+    "feijao": 0.45,
+    "milho": 0.42
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "Macarrão atingiu o ponto de entrada; dá para receber."
+  },
+  {
+   "id": "C28",
+   "titulo": "Destino logo abaixo do mínimo (0,49)",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.4,
+    "macarrao": 0.49,
+    "feijao": 0.45,
+    "milho": 0.42
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [],
+    "sem_destino": [
+     "abobora"
+    ]
+   },
+   "justificativa": "Nenhum piquete chegou ao ponto de entrada."
+  },
+  {
+   "id": "C29",
+   "titulo": "Chuva forte só amanhã: move hoje",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.84,
+    "macarrao": 0.76,
+    "feijao": 0.63,
+    "milho": 0.55
+   },
+   "lotacao": {
+    "abobora": [
+     12,
+     6,
+     5
+    ]
+   },
+   "chuva_mm": [
+    0,
+    60,
+    5,
+    0,
+    0,
+    0,
+    0
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "macarrao"
+      ],
+      "dia": 0
+     }
+    ]
+   },
+   "justificativa": "Hoje o tempo está bom; adiar faria o gado passar a chuva no pasto esgotado."
+  },
+  {
+   "id": "C30",
+   "titulo": "Rebanho no limite de capacidade do único livre",
+   "ndvi": {
+    "abobora": 0.29,
+    "jerimum": 0.4,
+    "macarrao": 0.45,
+    "feijao": 0.7,
+    "milho": 0.42
+   },
+   "lotacao": {
+    "abobora": [
+     28,
+     0,
+     0
+    ]
+   },
+   "chuva_mm": [
+    0,
+    2,
+    8,
+    12,
+    0,
+    0,
+    5
+   ],
+   "esperado": {
+    "movimentos": [
+     {
+      "origem": "abobora",
+      "destinos": [
+       "feijao"
+      ]
+     }
+    ]
+   },
+   "justificativa": "28 UA cabem nos 4,73 ha do Feijão (máx. 28,4 UA)."
+  }
+ ]
+}
