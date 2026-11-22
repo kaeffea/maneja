@@ -48,8 +48,37 @@ export interface PrevisaoDia {
 }
 
 export interface PrevisaoClima {
+  fonte?: string;
+  consultado_em?: string;
   fazenda_id: string;
   dias: PrevisaoDia[]; // 7 dias, a partir de hoje
+}
+
+export interface Coleira {
+  id: string;
+  categoria: string;
+  piquete_cadastro_id: string;
+  piquete_observado_id: string | null;
+  ultima_posicao: { lat: number; lon: number; instante: string } | null;
+}
+
+export interface OcupacaoPiquete {
+  piquete_id: string;
+  nome: string;
+  coleiras_esperadas: number;
+  coleiras_observadas: number;
+  sem_sinal: number;
+  situacao: "confere" | "diverge" | "sem_coleiras";
+}
+
+export interface Verificacao {
+  movimentacao_id: string;
+  origem_plano: "maneja" | "seugado";
+  data: string;
+  piquete_origem_id: string | null;
+  piquete_destino_id: string | null;
+  status: "cumprida" | "pendente" | "divergente" | "sem_dados" | "sem_vinculo";
+  fracao_no_destino: number | null;
 }
 
 export type StatusMovimentacao = "pendente" | "aceita" | "recusada" | "trocada";

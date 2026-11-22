@@ -32,4 +32,4 @@ flowchart LR
     uc4 -. inclui .-> uc9
 ```
 
-Código: `backend/maneja/api.py` (um endpoint por caso de uso) e `src/paginas/`.
+Código: [rotas da API](../../backend/maneja/api.py), [Mapa](../../src/paginas/Mapa.tsx), [Plano](../../src/paginas/Plano.tsx) e [Campo](../../src/paginas/Campo.tsx).
