@@ -218,7 +218,7 @@ class Sistema:
 
         # coleiras do grupo: as que estão de fato na origem agora (base do planejado × realizado)
         mov.coleiras = coleiras_do_grupo(mov.piquete_origem_id, self.repo.coleiras, self.repo.piquetes,
-                                         self.repo.posicoes, self.agora(), incluir_cadastro=False)
+                                         self.repo.posicoes_vigentes(), self.agora(), incluir_cadastro=False)
         # o cadastro passa a dizer que o rebanho está no destino; o campo só muda quando o gado for levado
         rebanho = origem_lot.rebanho
         self.repo.lotacao = [l for l in self.repo.lotacao if l.piquete_id not in (mov.piquete_origem_id, destino_id)]
@@ -255,7 +255,7 @@ class Sistema:
         return len(posicoes)
 
     def coleiras(self) -> list[dict]:
-        ultimas = ultimas_posicoes(self.repo.posicoes, self.agora())
+        ultimas = ultimas_posicoes(self.repo.posicoes_vigentes(), self.agora())
         resultado = []
         for c in self.repo.coleiras:
             pos = ultimas.get(c.id)
@@ -269,11 +269,12 @@ class Sistema:
         return resultado
 
     def ocupacao(self) -> list[OcupacaoPiquete]:
-        return ocupacao(self.repo.piquetes, self.repo.coleiras, self.repo.posicoes, self.agora())
+        return ocupacao(self.repo.piquetes, self.repo.coleiras, self.repo.posicoes_vigentes(), self.agora())
 
     # ---------- planejado × realizado ----------
     def verificacoes(self) -> tuple[list[Verificacao], list[str]]:
         agora, hoje = self.agora(), self.hoje()
+        posicoes = self.repo.posicoes_vigentes()
         planejadas = [m for m in self.repo.historico if m.status in ("aceita", "trocada") and m.coleiras]
         avisos: list[str] = []
         try:
@@ -283,10 +284,10 @@ class Sistema:
         if plano:
             antes = len(self.repo.grupos_externos)
             planejadas += movimentacoes_externas(plano, self.repo.piquetes, self.repo.coleiras,
-                                                 self.repo.posicoes, agora, self.repo.grupos_externos)
+                                                 posicoes, agora, self.repo.grupos_externos)
             if len(self.repo.grupos_externos) != antes:
                 self.persistir()
-        return [verificar(m, self.repo.piquetes, self.repo.posicoes, agora, hoje) for m in planejadas], avisos
+        return [verificar(m, self.repo.piquetes, posicoes, agora, hoje) for m in planejadas], avisos
 
     def execucoes(self, desde: str) -> list[dict]:
         verificacoes, _ = self.verificacoes()
@@ -322,13 +323,20 @@ class Sistema:
         plano = self.seugado_plano_seguro()
         if plano:
             candidatas += movimentacoes_externas(plano, self.repo.piquetes, self.repo.coleiras,
-                                                 self.repo.posicoes, self.agora(), self.repo.grupos_externos)
+                                                 self.repo.posicoes_vigentes(), self.agora(), self.repo.grupos_externos)
         mov = next((m for m in candidatas if m.id == mov_id and m.status in ("aceita", "trocada")), None)
         if mov is None:
             raise KeyError(mov_id)
         alvo = piquete_id or mov.piquete_destino_id
         if not any(p.id == alvo for p in self.repo.piquetes):
             raise KeyError(alvo)
+        movidas = {cid for cid in mov.coleiras if cid in self.simulador.fisico and self.simulador.fisico[cid] != alvo}
+        agora = self.agora()
+        # Em relógios fixos, separa a leitura nova de uma leitura anterior no mesmo instante.
+        if any(p.coleira_id in movidas and p.instante == agora for p in self.repo.posicoes):
+            self.relogio.deslocamento += timedelta(microseconds=1)
+            agora = self.agora()
+        self.repo.ultima_movimentacao_fisica.update(dict.fromkeys(movidas, agora))
         self.simulador.mover(mov.coleiras, alvo)
         self.gerar_posicoes()
 

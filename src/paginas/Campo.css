@@ -40,6 +40,11 @@
   color: var(--cor-destaque-escura);
 }
 
+.campo-coluna-curta { display: none; }
+
 @media (max-width: 480px) {
   .campo-tabela { font-size: 0.75rem; }
+  .campo-tabela thead th { overflow-wrap: normal; }
+  .campo-coluna-longa { display: none; }
+  .campo-coluna-curta { display: inline; }
 }

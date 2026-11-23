@@ -93,8 +93,14 @@ export default function Campo() {
             {ocupacao.length > 0 ? (
               <table className="campo-tabela">
                 <thead><tr>
-                  <th scope="col">Piquete</th><th scope="col">Esperadas</th>
-                  <th scope="col">Observadas</th><th scope="col">Sem sinal</th><th scope="col">Situação</th>
+                  <th scope="col">Piquete</th>
+                  <th scope="col" aria-label="Esperadas">
+                    <span className="campo-coluna-longa">Esperadas</span><span className="campo-coluna-curta">Esp.</span>
+                  </th>
+                  <th scope="col" aria-label="Observadas">
+                    <span className="campo-coluna-longa">Observadas</span><span className="campo-coluna-curta">Obs.</span>
+                  </th>
+                  <th scope="col">Sem sinal</th><th scope="col">Situação</th>
                 </tr></thead>
                 <tbody>{ocupacao.map((p) => (
                   <tr key={p.piquete_id}>
