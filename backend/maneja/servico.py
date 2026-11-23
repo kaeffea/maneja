@@ -330,14 +330,17 @@ class Sistema:
         alvo = piquete_id or mov.piquete_destino_id
         if not any(p.id == alvo for p in self.repo.piquetes):
             raise KeyError(alvo)
-        movidas = {cid for cid in mov.coleiras if cid in self.simulador.fisico and self.simulador.fisico[cid] != alvo}
+        grupo = set(mov.coleiras) | {
+            cid for cid, piquete in self.simulador.fisico.items() if piquete == mov.piquete_origem_id
+        }
+        movidas = {cid for cid in grupo if cid in self.simulador.fisico and self.simulador.fisico[cid] != alvo}
         agora = self.agora()
         # Em relógios fixos, separa a leitura nova de uma leitura anterior no mesmo instante.
         if any(p.coleira_id in movidas and p.instante == agora for p in self.repo.posicoes):
             self.relogio.deslocamento += timedelta(microseconds=1)
             agora = self.agora()
         self.repo.ultima_movimentacao_fisica.update(dict.fromkeys(movidas, agora))
-        self.simulador.mover(mov.coleiras, alvo)
+        self.simulador.mover(sorted(grupo), alvo)
         self.gerar_posicoes()
 
     def seugado_plano_seguro(self) -> dict | None:
