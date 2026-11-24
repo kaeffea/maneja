@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from datetime import datetime, timezone
 
 import psycopg
 import pytest
@@ -35,6 +36,36 @@ def banco_limpo(url_banco):
 
 def _config(url):
     return Config(perda_sinal=0.0, semente=7, database_url=url)
+
+
+def test_coleira_sem_sinal_apos_movimentacao(banco_limpo, monkeypatch):
+    inicio = datetime.now(timezone.utc)
+    config = _config(banco_limpo)
+    sistema = montar_sistema(config, inicio=inicio)
+    plano = sistema.gerar_plano()
+    mov = sistema.aceitar(next(m.id for m in plano.movimentacoes if m.piquete_origem_id == "pq-abobora"))
+    coleira = mov.coleiras[0]
+    posicoes = sistema.simulador.gerar_posicoes
+    monkeypatch.setattr(sistema.simulador, "gerar_posicoes", lambda instante: [
+        p for p in posicoes(instante) if p.coleira_id != coleira
+    ])
+    sistema.simulador_executar(mov.id)
+
+    sistema = montar_sistema(_config(banco_limpo), inicio=inicio)
+    ocupacao = {p.piquete_id: p for p in sistema.ocupacao()}
+    assert ocupacao[mov.piquete_origem_id].coleiras_observadas == 0
+    destino = ocupacao[mov.piquete_destino_id]
+    assert destino.situacao == "confere"
+    assert destino.sem_sinal == 1
+    assert destino.coleiras_observadas == len(mov.coleiras) - 1
+    assert next(c for c in sistema.coleiras() if c["id"] == coleira)["ultima_posicao"] is None
+    assert any(p.coleira_id == coleira for p in sistema.repo.posicoes)
+    verificacoes, _ = sistema.verificacoes()
+    assert (verificacoes[0].status, verificacoes[0].fracao_no_destino) == ("cumprida", 1.0)
+
+    sistema.simulador_avancar(1 / 60)
+    recuperada = next(c for c in sistema.coleiras() if c["id"] == coleira)
+    assert recuperada["piquete_observado_id"] == mov.piquete_destino_id
 
 
 @given("o sistema com PostgreSQL", target_fixture="url")

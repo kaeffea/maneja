@@ -9,6 +9,7 @@ As posições das coleiras só crescem: cada `salvar()` grava apenas as novas.
 from __future__ import annotations
 
 import dataclasses
+import json
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -100,6 +101,11 @@ class RepositorioPg(RepositorioMemoria):
             linhas = conn.execute("SELECT id, categoria, piquete_cadastro_id, piquete_fisico_id FROM coleira ORDER BY ordem").fetchall()
             repo.coleiras = [Coleira(r[0], r[1], r[2]) for r in linhas]
             repo.fisico = {r[0]: r[3] for r in linhas}
+            cortes = conn.execute("SELECT valor FROM parametro WHERE chave = 'ultima_movimentacao_fisica'").fetchone()
+            if cortes:
+                repo.ultima_movimentacao_fisica = {
+                    cid: datetime.fromisoformat(instante) for cid, instante in json.loads(cortes[0]).items()
+                }
             limite = datetime.now(timezone.utc) + timedelta(seconds=deslocamento_s) - timedelta(hours=POSICOES_CARREGADAS_H)
             repo.posicoes = [Posicao(*r) for r in conn.execute(
                 "SELECT coleira_id, instante, lat, lon FROM posicao WHERE instante >= %s ORDER BY id", (limite,))]
@@ -140,5 +146,9 @@ class RepositorioPg(RepositorioMemoria):
                     (k, Jsonb(v)) for k, v in self.grupos_externos.items()])
                 cur.execute("INSERT INTO parametro VALUES ('deslocamento_relogio_s', %s) "
                             "ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor", (str(self.deslocamento_s),))
+                cur.execute("INSERT INTO parametro VALUES ('ultima_movimentacao_fisica', %s) "
+                            "ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor", (json.dumps({
+                                cid: instante.isoformat() for cid, instante in self.ultima_movimentacao_fisica.items()
+                            }),))
         self._posicoes_gravadas = len(self.posicoes)
 

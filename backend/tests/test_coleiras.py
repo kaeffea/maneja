@@ -13,6 +13,27 @@ from maneja.geo import contem
 scenarios("coleiras.feature")
 
 
+def test_simulador_move_coleira_sem_sinal_no_aceite(ctx):
+    s = sistema(ctx)
+    origem = piquete_id(ctx, "Piquete Abóbora")
+    coleira = next(c for c in s.repo.coleiras if c.piquete_cadastro_id == origem)
+    s.repo.posicoes[:] = [p for p in s.repo.posicoes if p.coleira_id != coleira.id]
+    outro_piquete = {cid: pid for cid, pid in s.simulador.fisico.items() if pid != origem}
+
+    plano = s.gerar_plano()
+    mov = s.aceitar(next(m.id for m in plano.movimentacoes if m.piquete_origem_id == origem))
+    assert coleira.id not in mov.coleiras
+
+    s.simulador_executar(mov.id)
+
+    observada = next(c for c in s.coleiras() if c["id"] == coleira.id)
+    assert observada["piquete_observado_id"] == mov.piquete_destino_id
+    assert s.repo.ultima_movimentacao_fisica[coleira.id] == s.agora()
+    assert {cid: s.simulador.fisico[cid] for cid in outro_piquete} == outro_piquete
+    assert _ocupacao(ctx, "Piquete Abóbora").coleiras_observadas == 0
+    assert _ocupacao(ctx, "Piquete Macarrão").situacao == "confere"
+
+
 @given(parsers.parse('uma coleira no "{nome}"'))
 def uma_coleira(ctx, nome):
     piquetes = piquetes_demo()
