@@ -40,4 +40,4 @@ O checklist da seção 5 de `docs/04-deploy.md`.
 CI/CD além da integração da Vercel com o GitHub. Migrações versionadas. Gravação por linha (hoje vale a última gravação, o que basta para a demonstração).
 
 ## Situação
-Código pronto em 19/11 (Kauê): 39 cenários. **Falta a parte que depende da conta do Kauê:** criar o projeto no Supabase, importar os dois projetos na Vercel e configurar as variáveis (`docs/04-deploy.md`).
+Feita e publicada em 24/11 (Kauê): front em `https://maneja.tech` (`maneja-web` na Vercel), API em `https://api.maneja.tech` (`maneja-api` na Vercel, região `gru1`, `sem_estado: true`) e banco PostgreSQL no Supabase (São Paulo, Transaction pooler porta 6543). Aceite manual completo validado em produção (`/saude`, CORS, login, Open-Meteo real, coleiras no mapa, plano + confirmação + persistência pós-reload, simulador `Campo` Cumprida pós-reload e mobile `360 px`).

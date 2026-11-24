@@ -25,4 +25,9 @@ Defeitos encontrados e corrigidos na rodada de 24/11 (todos severidade 3/4):
 - Alinhamento e estilização da página `Campo` fora do container `.pagina` (`src/paginas/Campo.tsx` e `Campo.css`).
 - Reaproveitamento do token em `SeuGadoApi` quando `POST /auth/token` não retorna `expires_in`, alinhado ao contrato real do SeuGado (`backend/maneja/adaptadores/seugado.py`).
 
-Pendências externas ao código: publicar na Vercel + Supabase (SPEC-013), fechar slides e vídeo de reserva da apresentação (SPEC-014) e abrir o PR final do fork para `joaopedrosss/maneja`.
+Pendências externas ao código: fechar slides da apresentação presencial (SPEC-014) e abrir o PR final do fork para `joaopedrosss/maneja`.
+
+## Aceite em produção · 24/11/2026 (`maneja.tech` + `api.maneja.tech` + Supabase)
+
+- `https://api.maneja.tech/saude` → HTTP 200 em `gru1` com `banco: postgresql` e `sem_estado: true`; CORS ativo para `https://maneja.tech`.
+- `https://maneja.tech` (desktop `1280×800` e mobile `360×740`): 5 piquetes + coleiras GPS no Mapa, Open-Meteo real em Plano, geração e aceite da movimentação persistidos no Supabase após reload, **Campo** com simulador (`VITE_MODO_DEMO=1`) marcando **Cumprida (100%)** e persistindo após reload, 7 abas legíveis em `360 px`, zero erros de console/CORS/HTTP 5xx.

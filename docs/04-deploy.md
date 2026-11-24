@@ -55,8 +55,9 @@ Sugestão: **`maneja.com.br`** no Registro.br (cerca de R$ 40/ano). É o item AQ
 - Na Vercel, adicione `app.maneja.com.br` no projeto web e `api.maneja.com.br` no projeto da API. Depois, crie no DNS os registros CNAME que a Vercel mostrar.
 - Depois do domínio, atualize `MANEJA_CORS_ORIGENS` e `VITE_API_URL`.
 
-## 5. Conferência (aceite da SPEC-013)
+## 5. Conferência (aceite da SPEC-013 — validado em 24/11 em `maneja.tech`)
 
-- [ ] `https://<api>/saude` responde `ok` com `banco: postgresql`.
-- [ ] O site abre, pede login e, depois de entrar, mostra o mapa com os 5 piquetes.
-- [ ] Gerar plano e confirmar; recarregar a página: o rebanho continua no destino (o dado está no Supabase).
+- [x] `https://api.maneja.tech/saude` responde `ok` com `banco: postgresql` e `sem_estado: true` (`gru1`).
+- [x] `https://maneja.tech` abre, pede login e, depois de entrar, mostra o mapa com os 5 piquetes e coleiras GPS.
+- [x] Gerar plano e confirmar; recarregar a página: o rebanho continua no destino (o dado está no Supabase).
+- [x] Simulador em **Campo** (`VITE_MODO_DEMO=1`) registra **Cumprida** e persiste após recarregar; mobile `360 px` sem rolagem horizontal.
