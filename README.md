@@ -31,6 +31,7 @@ uv sync
 uv run pytest                                  # cenários BDD
 uv run uvicorn maneja.api:app --reload         # API em http://localhost:8000 (documentação em /docs)
 # login de desenvolvimento: tecnico@maneja.app / maneja123 (troque com MANEJA_USUARIO_EMAIL, MANEJA_USUARIO_SENHA e MANEJA_JWT_SEGREDO)
+uv run --env-file .env uvicorn maneja.api:app --reload           # com o Gemini: MANEJA_GEMINI_API_KEY no backend/.env (SPEC-005)
 MANEJA_SEUGADO_MODO=arquivo uv run uvicorn maneja.api:app --reload   # com o plano de exemplo do SeuGado
 DATABASE_URL=postgresql://... uv run uvicorn maneja.api:app            # grava em PostgreSQL (banco vazio recebe a demonstração)
 ```

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from functools import cached_property
 from pathlib import Path
@@ -19,7 +19,8 @@ from .demo import repositorio_demo
 from .servico import Relogio, Sistema
 
 EXEMPLO_PLANO_SEUGADO = Path(__file__).resolve().parent.parent / "exemplos" / "plano-seugado.json"
-MODELO_GEMINI_PADRAO = "gemini-3.1-flash-lite"
+MODELO_GEMINI_PADRAO = "gemini-3.1-flash-lite"  # SPEC-005: o 2.0 Flash foi desativado
+COTA_GEMINI_PADRAO = 50  # chamadas por dia e por instância (SPEC-005, risco R7)
 
 # Valores só para desenvolvimento e demonstração. Em produção, defina as variáveis (SPEC-013).
 EMAIL_PADRAO = "tecnico@maneja.app"
@@ -40,9 +41,9 @@ def auth_do_ambiente() -> ConfigAuth:
 
 @dataclass
 class Config:
-    gemini_chave: str = ""
+    gemini_chave: str = field(default="", repr=False)  # vazio = explicação só da regra (SPEC-005)
     gemini_modelo: str = MODELO_GEMINI_PADRAO
-    gemini_cota_diaria: int = 50
+    gemini_cota_diaria: int = COTA_GEMINI_PADRAO
     clima_modo: str = "simulado"
     cdse_client_id: str = ""
     cdse_client_secret: str = ""
@@ -84,9 +85,9 @@ class Config:
         e = os.environ
         semente = e.get("MANEJA_SEMENTE")
         return cls(
-            gemini_chave=e.get("MANEJA_GEMINI_API_KEY", ""),
-            gemini_modelo=e.get("MANEJA_GEMINI_MODELO", MODELO_GEMINI_PADRAO),
-            gemini_cota_diaria=int(e.get("MANEJA_GEMINI_COTA_DIARIA", "50")),
+            gemini_chave=e.get("MANEJA_GEMINI_API_KEY", "").strip(),
+            gemini_modelo=e.get("MANEJA_GEMINI_MODELO", "").strip() or MODELO_GEMINI_PADRAO,
+            gemini_cota_diaria=int(e.get("MANEJA_GEMINI_COTA_DIARIA") or COTA_GEMINI_PADRAO),
             clima_modo=e.get("MANEJA_CLIMA", "simulado"),
             cdse_client_id=e.get("MANEJA_CDSE_CLIENT_ID", ""),
             cdse_client_secret=e.get("MANEJA_CDSE_CLIENT_SECRET", ""),

@@ -47,7 +47,7 @@ O que NÃO fazer.
 | [002](SPEC-002-coleiras-e-ocupacao.md) | Coleiras simuladas e ocupação estimada | feita |
 | [003](SPEC-003-planejado-x-realizado.md) | Planejado × realizado e plano externo do SeuGado | feita |
 | [004](SPEC-004-api-rest.md) | API REST | feita |
-| [005](SPEC-005-gemini.md) | Gemini real escrevendo a explicação | a fazer |
+| [005](SPEC-005-gemini.md) | Gemini real escrevendo a explicação | em revisão |
 | [006](SPEC-006-clima-open-meteo.md) | Clima real (Open-Meteo) | a fazer |
 | [007](SPEC-007-ndvi-sentinel.md) | NDVI real (Sentinel-2) | a fazer · opcional |
 | [008](SPEC-008-persistencia-postgres.md) | Persistência PostgreSQL | feita |

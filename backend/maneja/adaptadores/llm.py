@@ -1,4 +1,4 @@
-"""Modelos de linguagem usados para explicar as movimentações."""
+"""Modelos de linguagem usados para explicar as movimentações: o Gemini real (SPEC-005) e as versões sem rede."""
 
 from __future__ import annotations
 
@@ -9,29 +9,43 @@ import httpx
 
 from ..dominio import CotaEsgotada
 
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+GEMINI_TIMEOUT_S = 15  # SPEC-005
+
 
 class GeminiLLM:
+    """Google Gemini pela API REST. Só escreve texto: quem decide é a regra (agente.py).
+
+    Qualquer falha vira exceção (CotaEsgotada no 429, RuntimeError no resto), e o agente
+    fica com o texto da regra. As mensagens de erro não levam a URL, que contém a chave.
+    """
+
     def __init__(self, chave: str, modelo: str, cliente_http: httpx.Client | None = None) -> None:
-        self.chave = chave
-        self.modelo = modelo
-        self.cliente_http = cliente_http or httpx.Client()
+        self._chave, self.modelo = chave, modelo
+        self._http = cliente_http or httpx.Client(timeout=GEMINI_TIMEOUT_S)
 
     def gerar_texto(self, prompt: str) -> str:
         try:
-            resposta = self.cliente_http.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{self.modelo}:generateContent",
-                params={"key": self.chave},
+            resposta = self._http.post(
+                GEMINI_URL.format(modelo=self.modelo),
+                params={"key": self._chave},
                 json={"contents": [{"parts": [{"text": prompt}]}]},
-                timeout=15,
+                timeout=GEMINI_TIMEOUT_S,
             )
-            if resposta.status_code == 429:
-                raise CotaEsgotada("cota do Gemini esgotada")
-            resposta.raise_for_status()
+        except httpx.TimeoutException as e:
+            raise RuntimeError(f"Gemini não respondeu em {GEMINI_TIMEOUT_S} s") from e
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"falha de conexão com o Gemini: {type(e).__name__}") from e
+        if resposta.status_code == 429:
+            raise CotaEsgotada("cota do Gemini esgotada (HTTP 429)")
+        if resposta.status_code != 200:
+            raise RuntimeError(f"Gemini respondeu HTTP {resposta.status_code}")
+        try:
             texto = resposta.json()["candidates"][0]["content"]["parts"][0]["text"]
-        except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
-            raise RuntimeError("Gemini indisponível ou resposta inválida") from None
+        except (ValueError, KeyError, IndexError, TypeError) as e:
+            raise RuntimeError("resposta do Gemini sem texto") from e
         if not isinstance(texto, str) or not texto.strip():
-            raise RuntimeError("Gemini respondeu sem texto")
+            raise RuntimeError("resposta do Gemini sem texto")
         return texto
 
 
@@ -46,7 +60,7 @@ class LLMFixo:
 
 
 class ControleDeCota:
-    """Risco R7: conta as chamadas e lança CotaEsgotada ao passar do limite."""
+    """Risco R7: conta as chamadas do dia e lança CotaEsgotada ao passar do limite."""
 
     def __init__(self, llm, limite: int) -> None:
         self._llm, self.limite, self.usado = llm, limite, 0
