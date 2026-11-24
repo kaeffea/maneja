@@ -53,21 +53,23 @@ export default function Campo() {
   }
 
   return (
-    <div className="campo">
-      <h1>Campo</h1>
-      {modo !== "api" ? <p>Conecte a API do Maneja para acompanhar as coleiras e as movimentações.</p> : (
+    <div className="pagina campo-pagina">
+      <div className="pagina-cabecalho">
+        <h1 className="pagina-titulo">Campo</h1>
+      </div>
+      {modo !== "api" ? <p className="cartao cartao-subtitulo">Conecte a API do Maneja para acompanhar as coleiras e as movimentações.</p> : (
         <>
-          {erro && <p role="alert" className="mensagem-erro">{erro}</p>}
-          {carregando && <p role="status">Consultando dados do campo…</p>}
-          {avisos.includes("plano_externo_indisponivel") && <p role="status">Plano do SeuGado indisponível.</p>}
+          {erro && <p role="alert" className="aviso-erro">{erro}</p>}
+          {carregando && <p role="status" className="cartao-subtitulo">Consultando dados do campo…</p>}
+          {avisos.includes("plano_externo_indisponivel") && <p role="status" className="aviso-alerta">Plano do SeuGado indisponível.</p>}
           {MOSTRAR_SIMULADOR && (
             <form className="cartao campo-simulador" onSubmit={(evento) => {
               evento.preventDefault();
               void simular(() => api.moverColeiras(movimento, piquete));
             }}>
               <h2 className="cartao-titulo">Simulador do campo</h2>
-              <label>Movimentação
-                <select required value={movimento} onChange={(evento) => setMovimento(evento.target.value)}>
+              <label className="campo">Movimentação
+                <select className="campo-entrada" required value={movimento} onChange={(evento) => setMovimento(evento.target.value)}>
                   <option value="">Selecione</option>
                   {movimentos.map((v) => (
                     <option key={v.movimentacao_id} value={v.movimentacao_id}>
@@ -77,14 +79,14 @@ export default function Campo() {
                   ))}
                 </select>
               </label>
-              <label>Piquete observado
-                <select required value={piquete} onChange={(evento) => setPiquete(evento.target.value)}>
+              <label className="campo">Piquete observado
+                <select className="campo-entrada" required value={piquete} onChange={(evento) => setPiquete(evento.target.value)}>
                   <option value="">Selecione</option>
                   {estado.piquetes.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
               </label>
-              <button className="botao-acao" disabled={ocupado || !movimento || !piquete}>Levar gado no campo</button>
-              <button className="botao-acao secundario" type="button" disabled={ocupado}
+              <button className="botao botao-primario" disabled={ocupado || !movimento || !piquete}>Levar gado no campo</button>
+              <button className="botao botao-secundario" type="button" disabled={ocupado}
                 onClick={() => void simular(api.avancarCampo)}>Avançar 1 dia</button>
             </form>
           )}

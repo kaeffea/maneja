@@ -6,14 +6,35 @@ e qualquer falha aqui vira um aviso, nunca um erro para o usuário.
 
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 from threading import Lock
-from time import monotonic
+from time import monotonic, time
 from typing import Protocol
 from urllib.parse import quote
 
 import httpx
+
+TTL_TOKEN_PADRAO_S = 3000.0  # usado quando /auth/token não devolve expires_in nem JWT com exp
+MARGEM_TOKEN_S = 30.0
+TTL_PLANO_S = 600.0  # cache de 10 minutos (SPEC-012 R3)
+
+
+def _ttl_token(token: str, dados: dict) -> float:
+    """Duração útil do token em segundos: prefere expires_in, depois exp do JWT, senão padrão."""
+    if "expires_in" in dados and dados["expires_in"] is not None:
+        return max(0.0, float(dados["expires_in"]) - MARGEM_TOKEN_S)
+    partes = token.split(".")
+    if len(partes) == 3:
+        try:
+            corpo = partes[1] + "=" * (-len(partes[1]) % 4)
+            payload = json.loads(base64.urlsafe_b64decode(corpo))
+            if isinstance(payload, dict) and isinstance(payload.get("exp"), (int, float)):
+                return max(0.0, float(payload["exp"]) - time() - MARGEM_TOKEN_S)
+        except (ValueError, json.JSONDecodeError):
+            pass
+    return TTL_TOKEN_PADRAO_S
 
 
 class ISeuGado(Protocol):
@@ -64,7 +85,7 @@ class SeuGadoApi:
             resposta.raise_for_status()
             dados = resposta.json()
             self._token = dados["access_token"]
-            self._token_ate = monotonic() + float(dados.get("expires_in", 0))
+            self._token_ate = monotonic() + _ttl_token(self._token, dados)
         return self._token
 
     def _consultar(self) -> httpx.Response:
@@ -90,5 +111,5 @@ class SeuGadoApi:
                 if not isinstance(plano, dict):
                     raise RuntimeError("Plano inválido do SeuGado")
             self._plano = plano
-            self._plano_ate = monotonic() + 600
+            self._plano_ate = monotonic() + TTL_PLANO_S
             return plano

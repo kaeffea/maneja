@@ -102,3 +102,45 @@ def resultado_externo(ctx, resultado):
     verificacoes, avisos = ctx["verificacoes"]
     assert any(v.origem_plano == "seugado" for v in verificacoes) == (resultado == "seugado")
     assert ("plano_externo_indisponivel" in avisos) == (resultado == "plano_externo_indisponivel")
+
+
+def test_seugado_api_reaproveita_token_sem_expires_in_e_renova_em_401(monkeypatch):
+    """Compatível com o Token do SeuGado (só access_token e token_type), cache de 10 min e retry 401."""
+    from maneja.adaptadores import seugado as seugado_mod
+
+    agora = [100.0]
+    monkeypatch.setattr(seugado_mod, "monotonic", lambda: agora[0])
+    plano = json.loads(EXEMPLO_PLANO_SEUGADO.read_text(encoding="utf-8"))
+    chamadas = {"auth": 0, "plano": 0}
+
+    def responder(requisicao):
+        if requisicao.url.path == "/auth/token":
+            chamadas["auth"] += 1
+            return httpx.Response(200, json={"access_token": f"tok-{chamadas['auth']}", "token_type": "bearer"})
+        chamadas["plano"] += 1
+        if chamadas["plano"] == 3 and requisicao.headers["Authorization"] == "Bearer tok-1":
+            return httpx.Response(401, json={"detail": "expirado"})
+        return httpx.Response(200, json=plano)
+
+    api = SeuGadoApi(
+        "https://seugado.test", "teste", "senha", "fazenda",
+        httpx.Client(transport=httpx.MockTransport(responder)),
+    )
+    # 1ª consulta autentica e coloca plano em cache por 10 min
+    assert api.plano_atual() == plano
+    assert chamadas == {"auth": 1, "plano": 1}
+
+    # Dentro dos 10 min, usa o cache do plano sem chamar a API
+    agora[0] += 300
+    assert api.plano_atual() == plano
+    assert chamadas == {"auth": 1, "plano": 1}
+
+    # Passados 10 min, renova o plano reutilizando o mesmo token (sem chamar /auth/token de novo)
+    agora[0] += 301
+    assert api.plano_atual() == plano
+    assert chamadas == {"auth": 1, "plano": 2}
+
+    # Passados mais 10 min, se o servidor devolver 401, reautentica e refaz a consulta
+    agora[0] += 601
+    assert api.plano_atual() == plano
+    assert chamadas == {"auth": 2, "plano": 4}

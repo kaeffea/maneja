@@ -184,15 +184,19 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 860px) {
+  .barra {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
   .barra-link {
     padding: 0 6px;
     font-size: 0.8rem;
   }
 
   .barra-link .icone {
-    width: 15px;
-    height: 15px;
+    display: none;
   }
 }
 
@@ -207,19 +211,24 @@
     left: 0;
     right: 0;
     z-index: 1100;
+    width: 100%;
+    justify-self: stretch;
     height: var(--altura-barra-inferior);
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
     gap: 0;
+    padding: 0 2px;
     background: var(--cor-superficie);
     border-top: 1px solid var(--cor-borda);
   }
 
   .barra-link {
+    flex: 0 1 auto;
     flex-direction: column;
     justify-content: center;
     gap: 3px;
-    padding: 4px 1px;
+    padding: 4px 2px;
     font-size: 0.625rem;
     letter-spacing: -0.02em;
     line-height: 1.1;
@@ -234,6 +243,7 @@
   }
 
   .barra-link .icone {
+    display: block;
     width: 18px;
     height: 18px;
   }
