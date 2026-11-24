@@ -147,8 +147,24 @@ def criar_app(sistema: Sistema | None = None, auth: ConfigAuth | None = None, re
 
     @app.get("/saude")
     def saude() -> dict[str, Any]:
-        return {"status": "ok", "modo_seugado": s().seugado.modo, "agora": s().agora().isoformat(),
-                "banco": "postgresql" if config.database_url else "memoria", "sem_estado": sem_estado}
+        llm = s().llm
+        llm_info = None
+        if llm is not None:
+            interno = getattr(llm, "_llm", llm)
+            modelos = getattr(interno, "modelos", None)
+            llm_info = {
+                "modelos": list(modelos) if modelos else [getattr(interno, "modelo", "desconhecido")],
+                "cota_usada": getattr(llm, "usado", None),
+                "cota_limite": getattr(llm, "limite", None),
+            }
+        return {
+            "status": "ok",
+            "modo_seugado": s().seugado.modo,
+            "agora": s().agora().isoformat(),
+            "banco": "postgresql" if config.database_url else "memoria",
+            "sem_estado": sem_estado,
+            "llm": llm_info,
+        }
 
     @app.post("/auth/token")
     def login(corpo: LoginIn) -> dict[str, Any]:

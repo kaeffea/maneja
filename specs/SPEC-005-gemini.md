@@ -53,4 +53,4 @@ O Gemini decidir destino. Chat livre com o usuário.
 - A cota é por instância e fica em memória. Com várias instâncias na Vercel, cada uma tem o seu contador, e quem segura a cota real é o 429 do Google, que já cai no texto da regra.
 
 ## Situação
-Feita em 20/11 (Leandro), integrada ao `main` em 22/11 e mesclada no `main` do fork em 24/11 (PR #2). Os 3 cenários de `backend/features/gemini.feature`, os 4 exemplos do Gemini em `integracoes.feature` e mais 35 testes em `backend/tests/test_gemini.py` estão passando (suíte total em 97 testes verdes). Testada também com o Gemini real.
+Feita em 20/11 (Leandro), integrada ao `main` em 22/11 e mesclada no `main` do fork em 24/11 (PR #2). Em 24/11 ganhou cadeia automática de fallback entre modelos ativos no plano gratuito (`gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-3.6-flash`, `gemini-3.8-flash`), logs sem expor a chave, diagnóstico em `/saude` e validador R3 insensível a maiúsculas/minúsculas. Suíte total em 104 testes verdes.

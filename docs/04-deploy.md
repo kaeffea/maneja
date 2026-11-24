@@ -33,7 +33,7 @@ navegador ──HTTPS──▶ maneja-web (Vercel, estático)      app.maneja.co
 | `MANEJA_SEUGADO_MODO` | (opcional) `desligado` (padrão), `arquivo` ou `api` |
 | `MANEJA_SEUGADO_URL`, `MANEJA_SEUGADO_EMAIL`, `MANEJA_SEUGADO_SENHA`, `MANEJA_SEUGADO_FAZENDA_ID` | necessárias no modo `api` |
 | `MANEJA_CLIMA` | `simulado` (padrão) ou `open-meteo` |
-| `MANEJA_GEMINI_API_KEY`, `MANEJA_GEMINI_MODELO`, `MANEJA_GEMINI_COTA_DIARIA` | opcionais. Sem chave, o texto vem da regra. Configure um modelo habilitado na conta. O limite diário em memória é por instância da API |
+| `MANEJA_GEMINI_API_KEY`, `MANEJA_GEMINI_MODELO`, `MANEJA_GEMINI_COTA_DIARIA` | opcionais. Sem chave, o texto vem da regra. `MANEJA_GEMINI_MODELO` aceita um modelo ou vários separados por vírgula e faz fallback automático pelos modelos ativos do plano gratuito (`gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-3.6-flash`, `gemini-3.8-flash`; desligável com `MANEJA_GEMINI_FALLBACK=0`). O limite diário em memória é por instância da API |
 | `MANEJA_CDSE_CLIENT_ID`, `MANEJA_CDSE_CLIENT_SECRET` | opcionais. Com ambos, `POST /ndvi/atualizar` consulta o Sentinel-2. A série anterior permanece disponível |
 
 4. Faça o deploy e confira em `https://<api>/saude`. A resposta deve ser `{"status": "ok", "banco": "postgresql", "sem_estado": true, ...}`.

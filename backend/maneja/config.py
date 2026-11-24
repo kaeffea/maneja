@@ -20,6 +20,13 @@ from .servico import Relogio, Sistema
 
 EXEMPLO_PLANO_SEUGADO = Path(__file__).resolve().parent.parent / "exemplos" / "plano-seugado.json"
 MODELO_GEMINI_PADRAO = "gemini-3.1-flash-lite"  # SPEC-005: o 2.0 Flash foi desativado
+# Modelos Flash/Flash-Lite ativos no plano gratuito da Gemini API (ordem de reserva)
+MODELOS_GEMINI_GRATUITO: tuple[str, ...] = (
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+)
 COTA_GEMINI_PADRAO = 50  # chamadas por dia e por instância (SPEC-005, risco R7)
 
 # Valores só para desenvolvimento e demonstração. Em produção, defina as variáveis (SPEC-013).
@@ -43,6 +50,7 @@ def auth_do_ambiente() -> ConfigAuth:
 class Config:
     gemini_chave: str = field(default="", repr=False)  # vazio = explicação só da regra (SPEC-005)
     gemini_modelo: str = MODELO_GEMINI_PADRAO
+    gemini_modelos_reserva: tuple[str, ...] = MODELOS_GEMINI_GRATUITO
     gemini_cota_diaria: int = COTA_GEMINI_PADRAO
     clima_modo: str = "simulado"
     cdse_client_id: str = ""
@@ -63,7 +71,10 @@ class Config:
     @cached_property
     def llm(self) -> ControleDeCota | None:
         if self.gemini_chave:
-            return ControleDeCota(GeminiLLM(self.gemini_chave, self.gemini_modelo), self.gemini_cota_diaria)
+            return ControleDeCota(
+                GeminiLLM(self.gemini_chave, self.gemini_modelo, modelos_reserva=self.gemini_modelos_reserva),
+                self.gemini_cota_diaria,
+            )
         return None
 
     @cached_property
@@ -84,9 +95,15 @@ class Config:
     def do_ambiente(cls) -> Config:
         e = os.environ
         semente = e.get("MANEJA_SEMENTE")
+        modelos_env = [m.strip() for m in e.get("MANEJA_GEMINI_MODELO", "").split(",") if m.strip()]
+        modelo_principal = modelos_env[0] if modelos_env else MODELO_GEMINI_PADRAO
+        usar_fallback = e.get("MANEJA_GEMINI_FALLBACK", "1") != "0"
+        extras = tuple(modelos_env[1:]) + (MODELOS_GEMINI_GRATUITO if usar_fallback else ())
+        reservas = tuple(dict.fromkeys(m for m in extras if m != modelo_principal))
         return cls(
             gemini_chave=e.get("MANEJA_GEMINI_API_KEY", "").strip(),
-            gemini_modelo=e.get("MANEJA_GEMINI_MODELO", "").strip() or MODELO_GEMINI_PADRAO,
+            gemini_modelo=modelo_principal,
+            gemini_modelos_reserva=reservas,
             gemini_cota_diaria=int(e.get("MANEJA_GEMINI_COTA_DIARIA") or COTA_GEMINI_PADRAO),
             clima_modo=e.get("MANEJA_CLIMA", "simulado"),
             cdse_client_id=e.get("MANEJA_CDSE_CLIENT_ID", ""),

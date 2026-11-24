@@ -260,3 +260,104 @@ def test_llm_passado_explicitamente_tem_prioridade():
 
 def test_chave_nao_aparece_no_repr_da_config():
     assert CHAVE not in repr(Config(gemini_chave=CHAVE))
+
+
+# ---------- fallback de modelos do plano gratuito ----------
+
+def test_fallback_tenta_proximo_modelo_em_429_e_404():
+    tentados = []
+
+    def responder(req: httpx.Request) -> httpx.Response:
+        modelo = req.url.path.split("/models/")[1].split(":")[0]
+        tentados.append(modelo)
+        if modelo == "m1":
+            return httpx.Response(429, json={"error": {"code": 429}})
+        if modelo == "m2":
+            return httpx.Response(404, json={"error": {"code": 404}})
+        return httpx.Response(200, json=resposta_gemini("ok no m3"))
+
+    llm = GeminiLLM(
+        CHAVE, "m1",
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        modelos_reserva=("m2", "m3"),
+    )
+    assert llm.gerar_texto("explique") == "ok no m3"
+    assert tentados == ["m1", "m2", "m3"]
+    assert llm.ultimo_modelo == "m3"
+
+
+def test_fallback_tenta_proximo_em_timeout():
+    tentados = []
+
+    def responder(req: httpx.Request) -> httpx.Response:
+        modelo = req.url.path.split("/models/")[1].split(":")[0]
+        tentados.append(modelo)
+        if modelo == "m1":
+            raise httpx.ReadTimeout("lento", request=req)
+        return httpx.Response(200, json=resposta_gemini("ok no m2"))
+
+    llm = GeminiLLM(
+        CHAVE, "m1",
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        modelos_reserva=("m2",),
+    )
+    assert llm.gerar_texto("explique") == "ok no m2"
+    assert tentados == ["m1", "m2"]
+
+
+def test_fallback_interrompe_em_403_chave_invalida():
+    tentados = []
+
+    def responder(req: httpx.Request) -> httpx.Response:
+        tentados.append(req.url.path)
+        return httpx.Response(403, json={"error": {"code": 403}})
+
+    llm = GeminiLLM(
+        CHAVE, "m1",
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        modelos_reserva=("m2", "m3"),
+    )
+    with pytest.raises(RuntimeError, match="403"):
+        llm.gerar_texto("explique")
+    assert len(tentados) == 1
+
+
+def test_fallback_todos_429_lanca_cota_esgotada():
+    llm = GeminiLLM(
+        CHAVE, "m1",
+        httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(429))),
+        modelos_reserva=("m2",),
+    )
+    with pytest.raises(CotaEsgotada):
+        llm.gerar_texto("explique")
+
+
+def test_config_monta_cadeia_de_fallback_gratuito(sem_gemini_no_ambiente):
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_API_KEY", CHAVE)
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_MODELO", "gemini-3.1-flash-lite")
+    llm = Config.do_ambiente().llm
+    assert llm is not None
+    modelos = llm._llm.modelos
+    assert modelos[0] == "gemini-3.1-flash-lite"
+    assert "gemini-3.5-flash-lite" in modelos
+    assert "gemini-3.6-flash" in modelos
+    assert "gemini-3.8-flash" in modelos
+    assert len(modelos) == len(set(modelos))
+
+
+def test_config_permite_desligar_fallback_automatico(sem_gemini_no_ambiente):
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_API_KEY", CHAVE)
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_MODELO", "gemini-3.1-flash-lite")
+    sem_gemini_no_ambiente.setenv("MANEJA_GEMINI_FALLBACK", "0")
+    llm = Config.do_ambiente().llm
+    assert llm is not None
+    assert llm._llm.modelos == ("gemini-3.1-flash-lite",)
+
+
+def test_validador_r3_aceita_minusculas_nos_nomes_dos_piquetes():
+    s = sistema_demo()
+    texto = "Leve o lote do piquete Abóbora para o piquete Macarrão, que está mais vigoroso."
+    s.llm = ControleDeCota(gemini_falso(lambda r: httpx.Response(200, json=resposta_gemini(texto))), limite=5)
+    mov = s.gerar_plano().movimentacoes[0]
+    assert mov.explicacao_origem == "llm"
+    assert mov.explicacao == texto

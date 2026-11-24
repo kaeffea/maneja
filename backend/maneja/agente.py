@@ -9,10 +9,13 @@ Mesmo algoritmo de gerarRecomendacao em src/lib/agente.ts:
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
+
+logger = logging.getLogger(__name__)
 
 from .datas import data_com_dia, decimal, dias_entre
 from .dominio import (
@@ -58,15 +61,20 @@ def novo_id(prefixo: str) -> str:
 def explicacao_valida(texto: str, origem: str, destino: str) -> bool:
     """Validador do risco R3: o texto precisa citar origem e destino e ser curto."""
     texto = texto.strip()
-    return 0 < len(texto) <= EXPLICACAO_MAX_CARACTERES and origem in texto and destino in texto
+    normalizado = texto.lower()
+    return (
+        0 < len(texto) <= EXPLICACAO_MAX_CARACTERES
+        and origem.lower() in normalizado
+        and destino.lower() in normalizado
+    )
 
 
 def montar_prompt(mov: Movimentacao, chuva_semana_mm: float) -> str:
     r = mov.rebanho
     return (
-        "Você é um assistente de manejo rotacionado de gado. Explique ao pecuarista, em até duas frases "
-        "e em português simples, a movimentação abaixo. Cite o piquete de origem e o de destino pelo nome. "
-        "Não sugira outro destino.\n"
+        "Você é um assistente de manejo rotacionado de gado. Explique ao pecuarista, em até duas frases curtas "
+        "(máximo 350 caracteres) e em português simples, a movimentação abaixo. Cite exatamente os nomes do piquete "
+        "de origem e do piquete de destino. Não sugira outro destino.\n"
         f"Origem: {mov.piquete_origem_nome} (NDVI {mov.ndvi_origem:.2f}).\n"
         f"Destino: {mov.piquete_destino_nome} (NDVI {mov.ndvi_destino:.2f}).\n"
         f"Rebanho: {r.bois} bois, {r.vacas} vacas, {r.bezerros} bezerros.\n"
@@ -81,12 +89,21 @@ def explicar(mov: Movimentacao, llm: ILLM | None, chuva_semana_mm: float) -> Non
         return
     try:
         texto = llm.gerar_texto(montar_prompt(mov, chuva_semana_mm))
-    except CotaEsgotada:
+    except CotaEsgotada as e:
+        logger.warning("LLM indisponível por cota, usando regra: %s", e)
         return
-    except Exception:  # noqa: BLE001 - LLM fora do ar nunca derruba o plano
+    except Exception as e:  # noqa: BLE001 - LLM fora do ar nunca derruba o plano
+        logger.warning("LLM falhou, usando regra: %s", e)
         return
     if explicacao_valida(texto, mov.piquete_origem_nome, mov.piquete_destino_nome):
         mov.explicacao, mov.explicacao_origem = texto.strip(), "llm"
+    else:
+        logger.warning(
+            "Explicação do LLM rejeitada pelo validador R3 (len=%d, origem=%s, destino=%s)",
+            len(texto.strip()),
+            mov.piquete_origem_nome.lower() in texto.lower(),
+            mov.piquete_destino_nome.lower() in texto.lower(),
+        )
 
 
 def gerar_plano(entrada: EntradaAgente, hoje: str, agora: datetime, llm: ILLM | None = None) -> PlanoManejo:
