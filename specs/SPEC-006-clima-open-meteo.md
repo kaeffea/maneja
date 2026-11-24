@@ -40,3 +40,6 @@ Funcionalidade: Clima
 
 ## Fora do escopo
 Histórico de chuva. Previsão por piquete.
+
+## Situação
+Feita em 19/11 (PR #1 do fork, mesclado em 21/11). `ClimaOpenMeteo` em `backend/maneja/adaptadores/clima.py` com cache de 3 h, fallback para cache anterior ou `ClimaSimulado`, campos `fonte` e `consultado_em` exibidos em `src/paginas/Plano.tsx` e cenários BDD em `backend/features/integracoes.feature` / `backend/tests/test_integracoes.py`.

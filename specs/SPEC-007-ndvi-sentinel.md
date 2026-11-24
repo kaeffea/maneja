@@ -33,3 +33,6 @@ Funcionalidade: NDVI por satélite
 
 ## Fora do escopo
 Mapa de calor dentro do piquete. Outros índices além do NDVI.
+
+## Situação
+Feita em 19/11 (PR #1 do fork, mesclado em 21/11). `SateliteSimulado` e `SateliteCopernicus` em `backend/maneja/adaptadores/satelite.py`, `atualizar_ndvi()` + `POST /ndvi/atualizar` em `servico.py`/`api.py`, e cenários BDD com descarte de nuvem > 30% em `backend/features/ndvi.feature` / `backend/tests/test_ndvi.py`.

@@ -39,3 +39,6 @@ Funcionalidade: Conjunto-ouro do agente
 
 ## Fora do escopo
 Mudar regras ou constantes do agente para "passar" nos casos. Os casos não plausíveis viram registro em `docs/05-conjunto-ouro.md` e, se a equipe decidir corrigir, uma nova spec.
+
+## Situação
+Feita em 22/11 (Leandro) e mesclada no `main` do fork em 24/11 (PR #3). **27 de 30 casos plausíveis (90%)** e **0 violações** das regras determinísticas, com relatório em `docs/05-conjunto-ouro.md` e cenários em `backend/features/conjunto_ouro.feature` / `backend/tests/test_conjunto_ouro.py`.

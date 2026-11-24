@@ -35,3 +35,6 @@ Funcionalidade: Campo
 
 ## Fora do escopo
 Trajetos e animação.
+
+## Situação
+Feita em 19/11 (PR #1 do fork), revisada por Leandro em 22/11 com correções mescladas em 24/11 (PR #4) e polimento visual/responsivo em 24/11 (`src/paginas/Campo.tsx`, `Campo.css`, `Mapa.tsx`, `Layout.css`). Validada ponta a ponta no navegador (desktop `1280×800`, `720×800` e mobile `360×740`): camada de coleiras no Mapa, fluxo **Cumprida** e **Divergente** no simulador, e aviso no modo demonstração offline.

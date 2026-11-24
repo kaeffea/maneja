@@ -37,3 +37,6 @@ Funcionalidade: SeuGado em modo api
 
 ## Fora do escopo
 Qualquer mudança no repositório do SeuGado (é decidida no processo de ADR de lá).
+
+## Situação
+Feita em 19/11 (PR #1 do fork) e ajustada em 24/11 para reaproveitar o token mesmo quando `POST /auth/token` não retorna `expires_in` (alinhado ao `Token` real do SeuGado), mantendo cache de 10 min e renovação automática em 401. Cenários e testes com `httpx.MockTransport` em `backend/features/integracoes.feature` e `backend/tests/test_integracoes.py`.

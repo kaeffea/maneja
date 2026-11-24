@@ -47,15 +47,15 @@ O que NÃO fazer.
 | [002](SPEC-002-coleiras-e-ocupacao.md) | Coleiras simuladas e ocupação estimada | feita |
 | [003](SPEC-003-planejado-x-realizado.md) | Planejado × realizado e plano externo do SeuGado | feita |
 | [004](SPEC-004-api-rest.md) | API REST | feita |
-| [005](SPEC-005-gemini.md) | Gemini real escrevendo a explicação | em revisão |
-| [006](SPEC-006-clima-open-meteo.md) | Clima real (Open-Meteo) | a fazer |
-| [007](SPEC-007-ndvi-sentinel.md) | NDVI real (Sentinel-2) | a fazer · opcional |
+| [005](SPEC-005-gemini.md) | Gemini real escrevendo a explicação | feita |
+| [006](SPEC-006-clima-open-meteo.md) | Clima real (Open-Meteo) | feita |
+| [007](SPEC-007-ndvi-sentinel.md) | NDVI real (Sentinel-2) | feita |
 | [008](SPEC-008-persistencia-postgres.md) | Persistência PostgreSQL | feita |
 | [009](SPEC-009-autenticacao.md) | Autenticação | feita |
 | [010](SPEC-010-front-na-api.md) | Front ligado à API | feita |
-| [011](SPEC-011-telas-coleiras-verificacao.md) | Telas de coleiras e planejado × realizado | a fazer |
-| [012](SPEC-012-seugado-modo-api.md) | Integração SeuGado em modo `api` | a fazer (Kauê) |
+| [011](SPEC-011-telas-coleiras-verificacao.md) | Telas de coleiras e planejado × realizado | feita |
+| [012](SPEC-012-seugado-modo-api.md) | Integração SeuGado em modo `api` | feita |
 | [013](SPEC-013-deploy-vercel.md) | Deploy na Vercel + Supabase | código pronto; falta publicar |
 | [014](SPEC-014-documentacao-sdd.md) | Documentação SDD e apresentação | em andamento |
 | [015](SPEC-015-identidade-visual.md) | Identidade visual própria | feita |
-| [016](SPEC-016-conjunto-ouro.md) | Conjunto-ouro do agente (30 casos, meta de 90%) | em revisão |
+| [016](SPEC-016-conjunto-ouro.md) | Conjunto-ouro do agente (30 casos, meta de 90%) | feita |
