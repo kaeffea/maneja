@@ -56,6 +56,6 @@ O que NÃO fazer.
 | [011](SPEC-011-telas-coleiras-verificacao.md) | Telas de coleiras e planejado × realizado | feita |
 | [012](SPEC-012-seugado-modo-api.md) | Integração SeuGado em modo `api` | feita |
 | [013](SPEC-013-deploy-vercel.md) | Deploy na Vercel + Supabase | feita (`maneja.tech`) |
-| [014](SPEC-014-documentacao-sdd.md) | Documentação SDD e apresentação | em andamento |
+| [014](SPEC-014-documentacao-sdd.md) | Documentação SDD e apresentação | feita |
 | [015](SPEC-015-identidade-visual.md) | Identidade visual própria | feita |
 | [016](SPEC-016-conjunto-ouro.md) | Conjunto-ouro do agente (30 casos, meta de 90%) | feita |

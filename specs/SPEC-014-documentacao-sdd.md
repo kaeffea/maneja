@@ -22,3 +22,6 @@ A AB2 avalia o método SDD: `CLAUDE.md`, um `.md` por diagrama UML e as specs co
 
 ## Fora do escopo
 Reescrever os documentos da AB1.
+
+## Situação
+Feita em 25/11: 8 diagramas UML revisados em `docs/uml/` com referência aos arquivos de código, roteiro presencial atualizado em `docs/apresentacao-final.md` (apresentação presencial sem vídeo em 26/11) e deck de 12 slides 16:9 pronto em `docs/apresentacao/Maneja-Apresentacao-Final-AB2.pdf` (fonte `slides.html` + prints reais de produção de `maneja.tech`).

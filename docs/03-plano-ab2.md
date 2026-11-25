@@ -32,7 +32,7 @@ Papéis da Gestão de RH: GER Jackson · FRN João Pedro · BCK Kauê · MID Mar
 | SPEC-013 | Deploy na Vercel + Supabase | Integração | 9 | Kauê | Jackson | 23/11 | ✅ feita |
 | SPEC-015 | Identidade visual própria (diferente do SeuGado) | Generic | 3, 8 | Kauê | João Pedro | 23/11 | ✅ feita |
 | SPEC-016 | Conjunto-ouro do agente (critério da atividade 7) | Core | 7 | Leandro | Leo Lima | 24/11 | ✅ feita |
-| SPEC-014 | Documentação SDD: UML em `.md`, roteiro e slides finais | Doc | 11 | Jackson e Júlia | todos | 25/11 | em andamento |
+| SPEC-014 | Documentação SDD: UML em `.md`, roteiro e slides finais | Doc | 11 | Jackson e Júlia | todos | 25/11 | ✅ feita |
 | — | Rodada de testes BDD e defeitos (severidade 1 e 2 bloqueiam) | Teste | 10 | Júlia e José Felix | — | 24/11 | ✅ feita |
 
 ## Semana

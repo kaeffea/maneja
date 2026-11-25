@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maneja · Apresentação Final AB2 · Equipe Delta (UFAL)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  @page {
+    size: 1280px 720px;
+    margin: 0;
+  }
+
+  :root {
+    --petroleo: #1f5a73;
+    --petroleo-escuro: #173f50;
+    --petroleo-suave: #d6e6ec;
+    --barro: #c8742b;
+    --barro-escuro: #a65e20;
+    --barro-suave: #f4e3d2;
+    --palha: #f5f2ea;
+    --superficie: #ffffff;
+    --superficie-2: #fbf9f4;
+    --texto: #1e2a2f;
+    --suave: #5e6b70;
+    --borda: #ded8cb;
+    --erro: #b42318;
+    --erro-suave: #fde4e1;
+    --ok: #1b6b46;
+    --ok-suave: #ddf1e7;
+    --fonte: "Manrope", "DejaVu Sans", "Liberation Sans", system-ui, sans-serif;
+    --mono: "DejaVu Sans Mono", "Liberation Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #142228;
+    font-family: var(--fonte);
+    color: var(--texto);
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .slide {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    background: var(--palha);
+    padding: 40px 56px 52px;
+    display: flex;
+    flex-direction: column;
+  }
+  .slide:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  @media screen {
+    .slide {
+      margin: 24px auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  /* ---------- cabeçalho e rodapé ---------- */
+  .topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--barro-escuro);
+  }
+  .kicker::before {
+    content: "";
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--barro);
+  }
+  .marca-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--petroleo);
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: 33px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+    color: var(--texto);
+  }
+  .subtitulo {
+    margin-top: 6px;
+    font-size: 15.5px;
+    font-weight: 500;
+    color: var(--suave);
+    line-height: 1.4;
+  }
+
+  .corpo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 18px;
+    min-height: 0;
+  }
+
+  .rodape {
+    position: absolute;
+    left: 56px;
+    right: 56px;
+    bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--suave);
+    border-top: 1px solid var(--borda);
+    padding-top: 9px;
+  }
+  .rodape strong { color: var(--petroleo); font-weight: 800; }
+
+  /* ---------- cartões e badges ---------- */
+  .card {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card-escuro {
+    background: var(--petroleo-escuro);
+    color: #fff;
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card-escuro p, .card-escuro li { color: #d6e4ea; }
+  .card-titulo {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    color: var(--texto);
+  }
+  .card-escuro .card-titulo { color: #fff; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-petroleo { background: var(--petroleo-suave); color: var(--petroleo-escuro); }
+  .badge-barro { background: var(--barro-suave); color: var(--barro-escuro); }
+  .badge-erro { background: var(--erro-suave); color: var(--erro); }
+  .badge-ok { background: var(--ok-suave); color: var(--ok); }
+  .badge-escuro { background: rgba(255, 255, 255, 0.14); color: #fff; border: 1px solid rgba(255, 255, 255, 0.22); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--superficie-2);
+    border: 1px solid var(--borda);
+    border-radius: 5px;
+    padding: 1px 5px;
+    color: var(--petroleo-escuro);
+  }
+  .card-escuro code {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
+
+  /* ---------- grades ---------- */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-60-40 { display: grid; grid-template-columns: 1.45fr 1fr; gap: 22px; align-items: center; }
+  .grid-55-45 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 22px; align-items: stretch; }
+  .grid-40-60 { display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px; align-items: center; }
+
+  .lista { list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 14px; line-height: 1.42; }
+  .lista li { position: relative; padding-left: 16px; }
+  .lista li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--barro);
+  }
+  .lista strong { color: var(--texto); font-weight: 700; }
+  .card-escuro .lista strong { color: #fff; }
+
+  /* ---------- capa ---------- */
+  .slide-capa {
+    background: linear-gradient(135deg, #113140 0%, #173f50 52%, #1f5a73 100%);
+    color: #fff;
+    padding: 54px 68px;
+    justify-content: space-between;
+  }
+  .capa-grade {
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 520px;
+    height: 520px;
+    opacity: 0.14;
+    pointer-events: none;
+  }
+  .capa-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+  }
+  .capa-inst {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #b9cdd5;
+  }
+  .capa-centro {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+  }
+  .capa-marca {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+  .capa-nome {
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    color: #fff;
+  }
+  .capa-linha {
+    width: 72px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--barro);
+    margin: 22px 0;
+  }
+  .capa-desc {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.42;
+    color: #e4eff3;
+  }
+  .capa-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+  }
+  .capa-badges .badge {
+    font-size: 13px;
+    padding: 6px 14px;
+  }
+  .capa-rodape {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    padding-top: 18px;
+    font-size: 13.5px;
+    color: #c5d7de;
+  }
+  .capa-rodape strong { color: #fff; font-weight: 700; }
+
+  /* ---------- tabelas ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th {
+    background: var(--petroleo-escuro);
+    color: #fff;
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 8.5px 12px;
+    border-bottom: 1px solid var(--borda);
+    vertical-align: middle;
+    line-height: 1.35;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--superficie-2); }
+
+  /* ---------- molduras de print ---------- */
+  .frame-web {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .frame-bar {
+    height: 26px;
+    background: #ede9de;
+    border-bottom: 1px solid var(--borda);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--suave);
+  }
+  .frame-dot { width: 8px; height: 8px; border-radius: 50%; background: #cfc8b8; }
+  .frame-url {
+    margin-left: 6px;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 4px;
+    padding: 1px 10px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--petroleo-escuro);
+  }
+  .frame-web img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .frame-phone {
+    width: 222px;
+    background: #173f50;
+    border-radius: 22px;
+    padding: 9px;
+    margin: 0 auto;
+    border: 2px solid #113140;
+  }
+  .frame-phone img {
+    display: block;
+    width: 100%;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  /* ---------- kpi ---------- */
+  .kpi {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-top: 4px solid var(--petroleo);
+    border-radius: 10px;
+    padding: 13px 16px 12px;
+  }
+  .kpi.destaque { border-top-color: var(--barro); }
+  .kpi-num {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--petroleo-escuro);
+    line-height: 1.05;
+  }
+  .kpi.destaque .kpi-num { color: var(--barro-escuro); }
+  .kpi-rotulo {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto);
+  }
+  .kpi-desc {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--suave);
+    line-height: 1.32;
+  }
+
+  /* ---------- pipeline SDD ---------- */
+  .etapas {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .etapa {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 14px 14px 16px;
+    position: relative;
+  }
+  .etapa-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--petroleo);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .etapa:nth-child(4) .etapa-num,
+  .etapa:nth-child(5) .etapa-num { background: var(--barro); }
+  .etapa h3 { font-size: 14.5px; font-weight: 800; margin-bottom: 6px; }
+  .etapa p { font-size: 12.5px; color: var(--suave); line-height: 1.4; }
+
+  /* ---------- timeline marcos ---------- */
+  .marcos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .marco {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-left: 5px solid var(--petroleo);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .marco.hoje { border-left-color: var(--barro); background: #fffcf7; }
+  .marco-data { font-size: 12px; font-weight: 800; color: var(--barro-escuro); text-transform: uppercase; letter-spacing: 0.8px; }
+  .marco-titulo { font-size: 15px; font-weight: 800; margin-top: 3px; }
+  .marco-texto { font-size: 12.5px; color: var(--suave); margin-top: 4px; line-height: 1.35; }
+
+  /* ---------- passo da demo ---------- */
+  .demo-lista {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px 16px;
+  }
+  .demo-passo {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 12px 15px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .demo-n {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--petroleo-suave);
+    color: var(--petroleo-escuro);
+    font-size: 13px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .demo-passo > div > strong { display: block; font-size: 14px; margin-bottom: 3px; color: var(--texto); }
+  .demo-passo span { font-size: 12.8px; color: var(--suave); line-height: 1.38; }
+  .demo-passo span strong { color: var(--texto); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ==================== SLIDE 1 · CAPA ==================== -->
+<section class="slide slide-capa">
+  <svg class="capa-grade" viewBox="0 0 400 400" fill="none" aria-hidden="true">
+    <path d="M40 210 L130 90 L330 130 L350 300 L120 350 Z" stroke="#ffffff" stroke-width="2" stroke-dasharray="6 6" />
+    <path d="M130 90 L220 220 L350 300" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4 6" />
+    <path d="M40 210 L220 220 L330 130" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4 6" />
+    <circle cx="220" cy="220" r="9" fill="#c8742b" />
+    <circle cx="220" cy="220" r="24" stroke="#c8742b" stroke-width="2" />
+    <circle cx="220" cy="220" r="46" stroke="#c8742b" stroke-width="1.2" opacity="0.6" />
+  </svg>
+
+  <div class="capa-topo">
+    <span class="capa-inst">UFAL · Gerência de Projetos · Prof. Rafael de Amorim Silva</span>
+    <span class="badge badge-escuro">Apresentação Final · AB2 · 26/11/2026</span>
+  </div>
+
+  <div class="capa-centro">
+    <div class="capa-marca">
+      <svg width="70" height="70" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#f5f2ea" />
+        <path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.2" stroke-linejoin="round" />
+        <path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b" />
+        <circle cx="17" cy="9.2" r="2" fill="#ffffff" />
+      </svg>
+      <span class="capa-nome">Maneja</span>
+    </div>
+    <div class="capa-linha"></div>
+    <p class="capa-desc">
+      Painel de manejo rotacionado de gado com monitoramento por <strong>NDVI</strong>,
+      <strong>coleiras GPS</strong>, verificação <strong>planejado × realizado</strong> e agente com IA explicável.
+    </p>
+    <div class="capa-badges">
+      <span class="badge badge-escuro">Em produção: maneja.tech</span>
+      <span class="badge badge-escuro">SDD + DDD + BDD</span>
+      <span class="badge badge-escuro">105 testes passando</span>
+      <span class="badge badge-escuro">Conjunto-ouro: 90% (0 violações)</span>
+    </div>
+  </div>
+
+  <div class="capa-rodape">
+    <div>
+      <strong>Equipe Delta</strong> · Tema 3: Sistemas Inteligentes para Agropecuária<br />
+      Jackson Bruno · João Pedro · Kauê Fortaleza · Maria Antônia · Leonardo Lima · Leandro Cavalcante · Júlia Pereira · José Félix
+    </div>
+    <div style="text-align:right">
+      <strong>maneja.tech</strong><br />
+      api.maneja.tech · Supabase + Vercel
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 2 · EQUIPE & MARCOS ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Organização &amp; Cronograma</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Equipe Delta, papéis de RH e marcos da AB2</h1>
+  <p class="subtitulo">Cada fatia do sistema (SPEC-001 a SPEC-016) foi distribuída pelos papéis da matriz RACI e rastreada no quadro Trello.</p>
+
+  <div class="corpo">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:22%">Integrante</th>
+          <th style="width:26%">Papel (Gestão de RH)</th>
+          <th>Principais entregas na AB2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Jackson Bruno</strong></td><td>Gerente de Projeto (GER · Líder)</td><td>Alinhamento de escopo, documentação SDD e apresentação final (SPEC-014)</td></tr>
+        <tr><td><strong>João Pedro</strong></td><td>Front-end (FRN)</td><td>Interface web React/Leaflet, revisão de PRs e telas de monitoramento (SPEC-011)</td></tr>
+        <tr><td><strong>Kauê Fortaleza</strong></td><td>Back-end (BCK)</td><td>Base SDD, API FastAPI, autenticação JWT, PostgreSQL, identidade visual, SeuGado e deploy (SPEC-001–004, 008–010, 012, 013, 015)</td></tr>
+        <tr><td><strong>Maria Antônia</strong></td><td>Monitoramento e Dados (MID)</td><td>Tela Campo &amp; coleiras GPS, Open-Meteo, NDVI Sentinel-2 e correções pós-revisão (SPEC-006, 007, 011)</td></tr>
+        <tr><td><strong>Leandro Cavalcante</strong></td><td>Inteligência Artificial (IA)</td><td>Alinhamento do agente, Gemini real com validador R3/cota R7 e conjunto-ouro de 30 casos (SPEC-005, 016)</td></tr>
+        <tr><td><strong>Leonardo Lima</strong></td><td>Inteligência de Dados</td><td>Modelagem de clima e dados de pastagem (SPEC-006 / revisão de métricas)</td></tr>
+        <tr><td><strong>Júlia Pereira</strong></td><td>Testes e Documentação</td><td>Rodada de testes BDD, triagem de defeitos e revisão SDD/UML (SPEC-014)</td></tr>
+        <tr><td><strong>José Félix</strong></td><td>Integração e Entrega</td><td>Revisão da integração, testes de entrega e documentação final (SPEC-014)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="marcos">
+      <div class="marco">
+        <div class="marco-data">10/11 · Concluído</div>
+        <div class="marco-titulo">Core (50%)</div>
+        <div class="marco-texto">Protótipo navegável alinhado à EAP, domínio, regras determinísticas e agente base.</div>
+      </div>
+      <div class="marco">
+        <div class="marco-data">24/11 · Concluído no prazo</div>
+        <div class="marco-titulo">Support (25%) + Generic (25%)</div>
+        <div class="marco-texto">API REST, login, PostgreSQL, Open-Meteo, Gemini, Campo/coleiras, conjunto-ouro 90% e deploy em <code>maneja.tech</code>.</div>
+      </div>
+      <div class="marco hoje">
+        <div class="marco-data">26/11 · Hoje</div>
+        <div class="marco-titulo">Apresentação Final</div>
+        <div class="marco-texto">Demonstração presencial ao vivo, evidência de SDD + BDD + UML e entrega consolidada.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>02 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 3 · PROBLEMA & ESCOPO ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Visão &amp; Escopo do Produto</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>O problema no campo e os 4 pilares entregues</h1>
+  <p class="subtitulo">No manejo rotacionado, decidir quando mover o gado depende do vigor do pasto — e confirmar se a troca aconteceu no campo quase nunca tem registro confiável.</p>
+
+  <div class="corpo">
+    <div class="grid-55-45">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card" style="border-left:5px solid var(--petroleo);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="card-titulo" style="margin:0;">1. Manejo inteligente</span>
+            <span class="badge badge-petroleo">Core · 50%</span>
+          </div>
+          <p style="font-size:13.5px; color:var(--suave); line-height:1.45;">
+            Agente detecta piquete com NDVI baixo (&lt; 0,35), escolhe destino apto por regras (NDVI &ge; 0,50, &le; 6 UA/ha, sem chuva &ge; 40 mm), explica com Gemini e confere <strong>planejado × realizado</strong> pelas coleiras.
+          </p>
+        </div>
+
+        <div class="card" style="border-left:5px solid var(--barro);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="card-titulo" style="margin:0;">2. Monitoramento &amp; 3. Cadastros</span>
+            <span class="badge badge-barro">Support · 25%</span>
+          </div>
+          <p style="font-size:13.5px; color:var(--suave); line-height:1.45;">
+            Série semanal de NDVI por piquete (adaptador Copernicus Sentinel-2 com máscara de nuvem &gt; 30%), previsão Open-Meteo, 10 coleiras GPS simuladas, estimativa de ocupação, desenho de polígonos no mapa e rebanho por categoria (bois, vacas, bezerros).
+          </p>
+        </div>
+
+        <div class="card" style="border-left:5px solid #4a7c59;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="card-titulo" style="margin:0;">4. Funcionalidades genéricas</span>
+            <span class="badge badge-ok">Generic · 25%</span>
+          </div>
+          <p style="font-size:13.5px; color:var(--suave); line-height:1.45;">
+            Autenticação JWT + PBKDF2, persistência transacional em PostgreSQL (Supabase), Dashboard com gráfico semanal, Histórico de decisões, identidade visual própria e navegação responsiva em 360 px.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card-escuro" style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <span class="badge badge-escuro" style="margin-bottom:12px;">Proposta em uma frase</span>
+            <p style="font-size:19px; font-weight:700; color:#fff; line-height:1.38;">
+              “Mostrar ao técnico <em>como está cada piquete</em> e <em>onde o gado está de fato</em>, recomendar o manejo com transparência e provar se ele foi cumprido.”
+            </p>
+          </div>
+          <div style="margin-top:18px; border-top:1px solid rgba(255,255,255,0.16); padding-top:14px;">
+            <div style="font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:#f4c598; margin-bottom:8px;">
+              Fora do escopo (deliberado no MVP)
+            </div>
+            <ul class="lista" style="font-size:13px; gap:6px;">
+              <li>Compra de hardware físico de coleiras (simuladas atrás de <code>IColeiras</code> — custo R$ 0).</li>
+              <li>Otimização com restrição de equipe/praça e Telegram (escopo do SeuGado).</li>
+              <li>Multi-fazenda na UI, pesagem individual e vacinação.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>03 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 4 · MÉTODO SDD + BDD ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Engenharia Orientada a Especificação</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Método SDD + BDD: nenhum código sem especificação</h1>
+  <p class="subtitulo">Seguimos rigorosamente o fluxo exigido na AB2: regras do projeto em <code>CLAUDE.md</code>, UML versionada em Markdown, specs fechadas e cenários Gherkin executáveis.</p>
+
+  <div class="corpo" style="gap:18px;">
+    <div class="etapas">
+      <div class="etapa">
+        <div class="etapa-num">1</div>
+        <h3>Contrato do Repo</h3>
+        <p><code>CLAUDE.md</code> fixa convenções, regra de independência, limites nomeados e fluxo de PR.</p>
+      </div>
+      <div class="etapa">
+        <div class="etapa-num">2</div>
+        <h3>8 UMLs em .md</h3>
+        <p><code>docs/uml/01..08</code> em Mermaid versionado, ligando cada diagrama aos arquivos de código.</p>
+      </div>
+      <div class="etapa">
+        <div class="etapa-num">3</div>
+        <h3>16 Specs (SDD)</h3>
+        <p><code>specs/SPEC-001..016</code> definem arquivos permitidos, requisitos verificáveis e fora de escopo.</p>
+      </div>
+      <div class="etapa">
+        <div class="etapa-num">4</div>
+        <h3>10 Features BDD</h3>
+        <p><code>backend/features/*.feature</code> em Gherkin (<em>Dado / Quando / Então</em>) ligados ao <code>pytest-bdd</code>.</p>
+      </div>
+      <div class="etapa">
+        <div class="etapa-num">5</div>
+        <h3>Revisão &amp; Aceite</h3>
+        <p>PR por spec, revisão entre pares, testes sem rede, validação no navegador e cartão no Trello.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-titulo">Exemplo real de cenário executável (<code>verificacao.feature</code>)</div>
+        <pre style="font-family:var(--mono); font-size:12.5px; line-height:1.52; background:#173f50; color:#e6f0f4; padding:14px 16px; border-radius:8px; margin-top:6px;"><span style="color:#f4c598; font-weight:700;">Funcionalidade:</span> Planejado x realizado pelas coleiras
+
+  <span style="color:#f4c598; font-weight:700;">Cenário:</span> Gado levado para o piquete errado
+    <span style="color:#8cd3f0;">Dado</span> uma movimentação aceita do "Piquete Abóbora" para "Piquete Macarrão"
+    <span style="color:#8cd3f0;">Quando</span> as coleiras vão para o "Piquete Feijão" e passam 2 dias
+    <span style="color:#8cd3f0;">Então</span> a verificação aparece como "divergente"
+    <span style="color:#8cd3f0;">E</span> a fração observada no destino é 0%</pre>
+      </div>
+
+      <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="card-titulo">Rastreabilidade completa no repositório</div>
+          <ul class="lista" style="margin-top:8px;">
+            <li><strong>13 Decisões de Arquitetura</strong> (<code>docs/01-decisoes.md</code>): de Python/FastAPI (D2) e LLM explicador (D4) até Vercel+Supabase (D11) e identidade visual própria (D13).</li>
+            <li><strong>8 Diagramas UML atualizados:</strong> Casos de Uso, Atividades, Sequência, Estados, Componentes, Implantação, Classes e Integração SeuGado.</li>
+            <li><strong>17 de 18 cartões</strong> do Trello concluídos com checklist, links de commit e histórico de revisões.</li>
+          </ul>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+          <span class="badge badge-petroleo">16 specs</span>
+          <span class="badge badge-petroleo">8 diagramas UML</span>
+          <span class="badge badge-barro">10 .feature</span>
+          <span class="badge badge-ok">13 ADRs (D1–D13)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>04 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 5 · ARQUITETURA DDD ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Arquitetura de Software · DDD</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Diagrama de Componentes em camadas DDD</h1>
+  <p class="subtitulo">Domínio puro isolado de serviços externos por interfaces (<code>Protocol</code>): qualquer serviço externo tem versão simulada para testes sem rede.</p>
+
+  <div class="corpo">
+    <div class="card" style="padding:18px 20px;">
+      <svg viewBox="0 0 1120 430" width="100%" height="410" xmlns="http://www.w3.org/2000/svg" font-family="Manrope, DejaVu Sans, sans-serif">
+        <!-- Aplicações -->
+        <rect x="10" y="10" width="1100" height="78" rx="10" fill="#eef4f6" stroke="#1f5a73" stroke-width="1.5" />
+        <text x="26" y="31" font-size="11" font-weight="800" fill="#1f5a73" letter-spacing="1.4">APLICAÇÕES</text>
+        <rect x="150" y="22" width="380" height="52" rx="8" fill="#ffffff" stroke="#1f5a73" stroke-width="1.5" />
+        <text x="340" y="45" text-anchor="middle" font-size="15" font-weight="800" fill="#1e2a2f">maneja-web (React 19 + Vite + Leaflet)</text>
+        <text x="340" y="63" text-anchor="middle" font-size="12" fill="#5e6b70">Mapa · Plano · Campo · Rebanho · Histórico · Dashboard · Fazenda</text>
+
+        <line x1="530" y1="48" x2="610" y2="48" stroke="#1f5a73" stroke-width="2" />
+        <polygon points="610,48 600,43 600,53" fill="#1f5a73" />
+        <text x="570" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#1f5a73">HTTPS</text>
+
+        <rect x="615" y="22" width="470" height="52" rx="8" fill="#173f50" />
+        <text x="850" y="45" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">API REST · FastAPI (backend/maneja/api.py)</text>
+        <text x="850" y="63" text-anchor="middle" font-size="12" fill="#b9cdd5">JWT HS256 · CORS · /plano · /coleiras · /verificacoes · /integracao/v1</text>
+
+        <!-- Setas para camadas de domínio -->
+        <line x1="260" y1="88" x2="260" y2="118" stroke="#5e6b70" stroke-width="1.8" />
+        <polygon points="260,118 255,109 265,109" fill="#5e6b70" />
+        <line x1="650" y1="88" x2="650" y2="118" stroke="#5e6b70" stroke-width="1.8" />
+        <polygon points="650,118 645,109 655,109" fill="#5e6b70" />
+        <line x1="965" y1="88" x2="965" y2="118" stroke="#5e6b70" stroke-width="1.8" />
+        <polygon points="965,118 960,109 970,109" fill="#5e6b70" />
+
+        <!-- CORE -->
+        <rect x="10" y="120" width="465" height="145" rx="10" fill="#fdf6ef" stroke="#c8742b" stroke-width="2" />
+        <text x="26" y="142" font-size="11.5" font-weight="800" fill="#a65e20" letter-spacing="1.4">CORE DOMAIN (50%)</text>
+        <rect x="26" y="155" width="210" height="94" rx="8" fill="#ffffff" stroke="#c8742b" stroke-width="1.5" />
+        <text x="131" y="180" text-anchor="middle" font-size="14.5" font-weight="800" fill="#1e2a2f">AgenteDeManejo</text>
+        <text x="131" y="199" text-anchor="middle" font-size="11.5" fill="#5e6b70">agente.py + regras.py</text>
+        <text x="131" y="218" text-anchor="middle" font-size="11" fill="#a65e20" font-weight="700">Regras decidem · R3 valida</text>
+        <text x="131" y="235" text-anchor="middle" font-size="11" fill="#5e6b70">conjunto_ouro.py (30 casos)</text>
+
+        <rect x="250" y="155" width="210" height="94" rx="8" fill="#ffffff" stroke="#c8742b" stroke-width="1.5" />
+        <text x="355" y="180" text-anchor="middle" font-size="14.5" font-weight="800" fill="#1e2a2f">Verificacao</text>
+        <text x="355" y="199" text-anchor="middle" font-size="11.5" fill="#5e6b70">verificacao.py</text>
+        <text x="355" y="218" text-anchor="middle" font-size="11" fill="#a65e20" font-weight="700">Planejado × Realizado</text>
+        <text x="355" y="235" text-anchor="middle" font-size="11" fill="#5e6b70">Cumprida / Divergente / Pendente</text>
+
+        <!-- SUPPORT -->
+        <rect x="492" y="120" width="320" height="145" rx="10" fill="#f1f7f9" stroke="#1f5a73" stroke-width="1.8" />
+        <text x="508" y="142" font-size="11.5" font-weight="800" fill="#1f5a73" letter-spacing="1.4">SUPPORT DOMAIN (25%)</text>
+        <rect x="508" y="155" width="142" height="94" rx="8" fill="#ffffff" stroke="#1f5a73" stroke-width="1.4" />
+        <text x="579" y="182" text-anchor="middle" font-size="14" font-weight="800" fill="#1e2a2f">Monitoramento</text>
+        <text x="579" y="201" text-anchor="middle" font-size="11" fill="#5e6b70">monitoramento.py</text>
+        <text x="579" y="218" text-anchor="middle" font-size="11" fill="#5e6b70">ndvi.py · geo.py</text>
+        <text x="579" y="236" text-anchor="middle" font-size="11" fill="#1f5a73" font-weight="700">Ocupação GPS</text>
+
+        <rect x="660" y="155" width="138" height="94" rx="8" fill="#ffffff" stroke="#1f5a73" stroke-width="1.4" />
+        <text x="729" y="182" text-anchor="middle" font-size="14" font-weight="800" fill="#1e2a2f">Cadastros</text>
+        <text x="729" y="201" text-anchor="middle" font-size="11" fill="#5e6b70">servico.py</text>
+        <text x="729" y="218" text-anchor="middle" font-size="11" fill="#5e6b70">Piquetes (GeoJSON)</text>
+        <text x="729" y="236" text-anchor="middle" font-size="11" fill="#1f5a73" font-weight="700">Rebanho / Lotação</text>
+
+        <!-- GENERIC -->
+        <rect x="828" y="120" width="282" height="145" rx="10" fill="#f3f8f5" stroke="#2c6e49" stroke-width="1.8" />
+        <text x="844" y="142" font-size="11.5" font-weight="800" fill="#1b6b46" letter-spacing="1.4">GENERIC DOMAIN (25%)</text>
+        <rect x="844" y="155" width="122" height="94" rx="8" fill="#ffffff" stroke="#2c6e49" stroke-width="1.4" />
+        <text x="905" y="182" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1e2a2f">Autenticação</text>
+        <text x="905" y="201" text-anchor="middle" font-size="11" fill="#5e6b70">autenticacao.py</text>
+        <text x="905" y="219" text-anchor="middle" font-size="11" fill="#1b6b46" font-weight="700">JWT + PBKDF2</text>
+        <text x="905" y="236" text-anchor="middle" font-size="10.5" fill="#5e6b70">Sem dep. externa</text>
+
+        <rect x="976" y="155" width="120" height="94" rx="8" fill="#ffffff" stroke="#2c6e49" stroke-width="1.4" />
+        <text x="1036" y="182" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1e2a2f">Painel</text>
+        <text x="1036" y="201" text-anchor="middle" font-size="11" fill="#5e6b70">Dashboard</text>
+        <text x="1036" y="219" text-anchor="middle" font-size="11" fill="#5e6b70">Histórico</text>
+        <text x="1036" y="236" text-anchor="middle" font-size="10.5" fill="#1b6b46" font-weight="700">Responsivo 360px</text>
+
+        <!-- Setas para Infra -->
+        <line x1="131" y1="265" x2="131" y2="300" stroke="#5e6b70" stroke-width="1.6" stroke-dasharray="4 3" />
+        <line x1="355" y1="265" x2="355" y2="300" stroke="#5e6b70" stroke-width="1.6" stroke-dasharray="4 3" />
+        <line x1="579" y1="265" x2="579" y2="300" stroke="#5e6b70" stroke-width="1.6" stroke-dasharray="4 3" />
+        <line x1="729" y1="265" x2="729" y2="300" stroke="#5e6b70" stroke-width="1.6" stroke-dasharray="4 3" />
+        <line x1="960" y1="265" x2="960" y2="300" stroke="#5e6b70" stroke-width="1.6" stroke-dasharray="4 3" />
+
+        <!-- INFRA / ADAPTADORES -->
+        <rect x="10" y="302" width="1100" height="116" rx="10" fill="#f7f4ec" stroke="#ded8cb" stroke-width="1.8" />
+        <text x="26" y="324" font-size="11.5" font-weight="800" fill="#5e6b70" letter-spacing="1.4">INFRAESTRUTURA · ADAPTADORES DESACOPLADOS (PORTAS / PROTOCOLOS + VERSÃO SIMULADA)</text>
+
+        <rect x="26" y="338" width="170" height="66" rx="8" fill="#ffffff" stroke="#ded8cb" stroke-width="1.4" />
+        <text x="111" y="362" text-anchor="middle" font-size="13" font-weight="800" fill="#1e2a2f">ILLM · Gemini</text>
+        <text x="111" y="380" text-anchor="middle" font-size="11" fill="#5e6b70">4 modelos gratuitos</text>
+        <text x="111" y="395" text-anchor="middle" font-size="10.5" fill="#a65e20">+ ControleDeCota</text>
+
+        <rect x="208" y="338" width="166" height="66" rx="8" fill="#ffffff" stroke="#ded8cb" stroke-width="1.4" />
+        <text x="291" y="362" text-anchor="middle" font-size="13" font-weight="800" fill="#1e2a2f">IClima</text>
+        <text x="291" y="380" text-anchor="middle" font-size="11" fill="#5e6b70">Open-Meteo (cache 3h)</text>
+        <text x="291" y="395" text-anchor="middle" font-size="10.5" fill="#1f5a73">+ fallback simulado</text>
+
+        <rect x="386" y="338" width="170" height="66" rx="8" fill="#ffffff" stroke="#ded8cb" stroke-width="1.4" />
+        <text x="471" y="362" text-anchor="middle" font-size="13" font-weight="800" fill="#1e2a2f">ISatelite · NDVI</text>
+        <text x="471" y="380" text-anchor="middle" font-size="11" fill="#5e6b70">Copernicus Sentinel-2</text>
+        <text x="471" y="395" text-anchor="middle" font-size="10.5" fill="#1f5a73">nuvem &gt; 30% descartada</text>
+
+        <rect x="568" y="338" width="164" height="66" rx="8" fill="#ffffff" stroke="#ded8cb" stroke-width="1.4" />
+        <text x="650" y="362" text-anchor="middle" font-size="13" font-weight="800" fill="#1e2a2f">IColeiras</text>
+        <text x="650" y="380" text-anchor="middle" font-size="11" fill="#5e6b70">Simulador (10 coleiras)</text>
+        <text x="650" y="395" text-anchor="middle" font-size="10.5" fill="#5e6b70">POST /coleiras/posicoes</text>
+
+        <rect x="744" y="338" width="166" height="66" rx="8" fill="#ffffff" stroke="#ded8cb" stroke-width="1.4" />
+        <text x="827" y="362" text-anchor="middle" font-size="13" font-weight="800" fill="#1e2a2f">ISeuGado</text>
+        <text x="827" y="380" text-anchor="middle" font-size="11" fill="#5e6b70">desligado | arquivo | api</text>
+        <text x="827" y="395" text-anchor="middle" font-size="10.5" fill="#a65e20">cache 10m + retry 401</text>
+
+        <rect x="922" y="338" width="172" height="66" rx="8" fill="#173f50" />
+        <text x="1008" y="362" text-anchor="middle" font-size="13" font-weight="800" fill="#ffffff">RepositorioPg</text>
+        <text x="1008" y="380" text-anchor="middle" font-size="11" fill="#b9cdd5">PostgreSQL / Memória</text>
+        <text x="1008" y="395" text-anchor="middle" font-size="10.5" fill="#f4c598">xact_lock + transação</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>05 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 6 · IMPLANTAÇÃO EM PRODUÇÃO ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Infraestrutura &amp; Deploy (SPEC-013)</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Implantação real em produção: <span style="color:var(--petroleo);">maneja.tech</span></h1>
+  <p class="subtitulo">Front estático e API serverless Python 3.12 na Vercel (região São Paulo <code>gru1</code>) + PostgreSQL no Supabase, com custo R$ 0/mês de hospedagem no MVP.</p>
+
+  <div class="corpo" style="gap:16px;">
+    <div class="card" style="padding:18px 20px;">
+      <svg viewBox="0 0 1120 265" width="100%" height="250" xmlns="http://www.w3.org/2000/svg" font-family="Manrope, DejaVu Sans, sans-serif">
+        <!-- Usuário -->
+        <rect x="10" y="65" width="180" height="125" rx="10" fill="#ffffff" stroke="#1f5a73" stroke-width="1.8" />
+        <text x="100" y="98" text-anchor="middle" font-size="14" font-weight="800" fill="#1e2a2f">Técnico / Gestor</text>
+        <text x="100" y="120" text-anchor="middle" font-size="12" fill="#5e6b70">Desktop ou Celular</text>
+        <text x="100" y="140" text-anchor="middle" font-size="11.5" fill="#1f5a73" font-weight="700">HTTPS · SPA 360px+</text>
+        <rect x="36" y="154" width="128" height="24" rx="12" fill="#d6e6ec" />
+        <text x="100" y="170" text-anchor="middle" font-size="11.5" font-weight="800" fill="#173f50">maneja.tech</text>
+
+        <!-- Seta Usuário -> Web -->
+        <line x1="190" y1="102" x2="245" y2="75" stroke="#1f5a73" stroke-width="2" />
+        <polygon points="245,75 235,74 239,83" fill="#1f5a73" />
+
+        <!-- Seta Usuário -> API -->
+        <line x1="190" y1="150" x2="245" y2="178" stroke="#c8742b" stroke-width="2" />
+        <polygon points="245,178 239,170 235,179" fill="#c8742b" />
+
+        <!-- Vercel Static -->
+        <rect x="250" y="18" width="265" height="92" rx="10" fill="#eef4f6" stroke="#1f5a73" stroke-width="1.8" />
+        <text x="268" y="42" font-size="11" font-weight="800" fill="#1f5a73" letter-spacing="1.2">VERCEL · STATIC EDGE</text>
+        <text x="268" y="66" font-size="15.5" font-weight="800" fill="#1e2a2f">maneja-web</text>
+        <text x="268" y="86" font-size="12" fill="#5e6b70">https://maneja.tech · Vite dist/</text>
+        <text x="268" y="101" font-size="11" fill="#5e6b70">SSL automático · vercel.json SPA rewrite</text>
+
+        <!-- Vercel API -->
+        <rect x="250" y="132" width="320" height="118" rx="10" fill="#173f50" />
+        <text x="268" y="156" font-size="11" font-weight="800" fill="#f4c598" letter-spacing="1.2">VERCEL FUNCTIONS · PYTHON 3.12 · GRU1</text>
+        <text x="268" y="180" font-size="15.5" font-weight="800" fill="#ffffff">maneja-api (FastAPI)</text>
+        <text x="268" y="200" font-size="12" fill="#d6e6ec">https://api.maneja.tech</text>
+        <text x="268" y="218" font-size="11.5" fill="#b9cdd5">Modo sem estado · CORS restrito · JWT</text>
+        <text x="268" y="236" font-size="11.5" fill="#f4c598">pg_advisory_xact_lock contra cold start</text>
+
+        <!-- Seta API -> Supabase -->
+        <line x1="570" y1="190" x2="648" y2="190" stroke="#1f5a73" stroke-width="2.2" />
+        <polygon points="648,190 638,185 638,195" fill="#1f5a73" />
+        <text x="609" y="176" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f5a73">TCP 6543</text>
+        <text x="609" y="206" text-anchor="middle" font-size="10" fill="#5e6b70">Pooler</text>
+
+        <!-- Supabase -->
+        <rect x="652" y="132" width="235" height="118" rx="10" fill="#f3f8f5" stroke="#1b6b46" stroke-width="2" />
+        <text x="670" y="156" font-size="11" font-weight="800" fill="#1b6b46" letter-spacing="1.2">SUPABASE · SÃO PAULO</text>
+        <text x="670" y="180" font-size="15.5" font-weight="800" fill="#1e2a2f">PostgreSQL</text>
+        <text x="670" y="200" font-size="12" fill="#5e6b70">Transaction Pooler (6543)</text>
+        <text x="670" y="218" font-size="11.5" fill="#5e6b70">prepare_threshold=None</text>
+        <text x="670" y="236" font-size="11.5" fill="#1b6b46" font-weight="700">schema.sql + seed automático</text>
+
+        <!-- Seta API -> Externos -->
+        <line x1="570" y1="154" x2="648" y2="66" stroke="#c8742b" stroke-width="1.8" stroke-dasharray="5 4" />
+        <polygon points="648,66 638,68 644,75" fill="#c8742b" />
+
+        <!-- APIs externas -->
+        <rect x="652" y="18" width="458" height="92" rx="10" fill="#fdf6ef" stroke="#c8742b" stroke-width="1.8" />
+        <text x="670" y="40" font-size="11" font-weight="800" fill="#a65e20" letter-spacing="1.2">SERVIÇOS EXTERNOS OPCIONAIS (COM FALLBACK DETERMINÍSTICO)</text>
+        <rect x="670" y="52" width="102" height="44" rx="7" fill="#fff" stroke="#ded8cb" />
+        <text x="721" y="72" text-anchor="middle" font-size="12" font-weight="800" fill="#1e2a2f">Gemini API</text>
+        <text x="721" y="87" text-anchor="middle" font-size="10" fill="#a65e20">4 modelos free</text>
+
+        <rect x="780" y="52" width="102" height="44" rx="7" fill="#fff" stroke="#ded8cb" />
+        <text x="831" y="72" text-anchor="middle" font-size="12" font-weight="800" fill="#1e2a2f">Open-Meteo</text>
+        <text x="831" y="87" text-anchor="middle" font-size="10" fill="#1f5a73">Clima 7 dias</text>
+
+        <rect x="890" y="52" width="102" height="44" rx="7" fill="#fff" stroke="#ded8cb" />
+        <text x="941" y="72" text-anchor="middle" font-size="12" font-weight="800" fill="#1e2a2f">Copernicus</text>
+        <text x="941" y="87" text-anchor="middle" font-size="10" fill="#5e6b70">Sentinel-2</text>
+
+        <rect x="1000" y="52" width="96" height="44" rx="7" fill="#fff" stroke="#ded8cb" />
+        <text x="1048" y="72" text-anchor="middle" font-size="12" font-weight="800" fill="#1e2a2f">SeuGado</text>
+        <text x="1048" y="87" text-anchor="middle" font-size="10" fill="#5e6b70">API opcional</text>
+
+        <!-- DNS box -->
+        <rect x="905" y="132" width="205" height="118" rx="10" fill="#ffffff" stroke="#ded8cb" stroke-width="1.6" />
+        <text x="922" y="156" font-size="11" font-weight="800" fill="#5e6b70" letter-spacing="1.2">DOMÍNIO &amp; SEGURANÇA</text>
+        <text x="922" y="180" font-size="13" font-weight="800" fill="#1f5a73">DNS na Vercel</text>
+        <text x="922" y="198" font-size="11.5" fill="#5e6b70">ns1/ns2.vercel-dns.com</text>
+        <text x="922" y="218" font-size="11.5" fill="#5e6b70">Segredos só no painel</text>
+        <text x="922" y="236" font-size="11.5" fill="#1b6b46" font-weight="700">Logs sem expor chaves</text>
+      </svg>
+    </div>
+
+    <div class="grid-3">
+      <div class="card" style="padding:14px 16px;">
+        <div class="card-titulo" style="font-size:14.5px; margin-bottom:4px;">Verificação ao vivo (<code>/saude</code>)</div>
+        <p style="font-size:12.5px; color:var(--suave); line-height:1.4;">HTTP 200 em <code>gru1</code> confirmando <code>banco: "postgresql"</code>, <code>sem_estado: true</code> e cadeia de modelos Gemini ativa.</p>
+      </div>
+      <div class="card" style="padding:14px 16px;">
+        <div class="card-titulo" style="font-size:14.5px; margin-bottom:4px;">Blindagem de produção</div>
+        <p style="font-size:12.5px; color:var(--suave); line-height:1.4;"><code>/auth/token</code> não abre banco, <code>httpx</code> silenciado (não grava <code>?key=</code>) e lock transacional elimina corrida em cold start.</p>
+      </div>
+      <div class="card" style="padding:14px 16px;">
+        <div class="card-titulo" style="font-size:14.5px; margin-bottom:4px;">Alinhado aos Custos (AB1)</div>
+        <p style="font-size:12.5px; color:var(--suave); line-height:1.4;">Hospedagem R$ 0/mês no plano gratuito (Vercel + Supabase) e domínio próprio <code>maneja.tech</code> dentro do orçamento previsto.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>06 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 7 · PRODUTO NO AR: MAPA + IDENTIDADE ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Produto no Ar · Identidade &amp; Mapa (SPEC-011 / SPEC-015)</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Mapa geoespacial, coleiras GPS e identidade própria</h1>
+  <p class="subtitulo">Paleta "campo" (azul-petróleo, barro e palha), fonte Manrope, escala de NDVI preservada e navegação responsiva para celular (360 px).</p>
+
+  <div class="corpo">
+    <div style="display:grid; grid-template-columns: 1.95fr 0.68fr 0.92fr; gap:16px; align-items:center;">
+      <div class="frame-web">
+        <div class="frame-bar">
+          <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
+          <span class="frame-url">https://maneja.tech/mapa</span>
+        </div>
+        <img src="img/mapa-coleiras.png" alt="Mapa do Maneja com piquetes em escala NDVI e coleiras GPS" style="width:100%; height:auto; max-height:415px; object-fit:contain; background:#f5f2ea;" />
+      </div>
+
+      <div class="frame-phone">
+        <img src="img/mobile-campo.png" alt="Tela Campo no celular 360px com barra inferior de 7 abas" />
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="card" style="padding:14px 16px;">
+          <div class="card-titulo" style="font-size:14.5px;">Mapa + Coleiras GPS</div>
+          <ul class="lista" style="font-size:12.5px; gap:6px;">
+            <li>Polígonos GeoJSON editáveis com cálculo automático de área (ha).</li>
+            <li>Escala de <strong>NDVI</strong> (vermelho &rarr; amarelo &rarr; azul) mantida como dado técnico.</li>
+            <li>Pontos por categoria (boi, vaca, bezerro); <strong>borda vermelha</strong> destaca coleira fora do piquete cadastrado.</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div class="card-titulo" style="font-size:14.5px;">Identidade própria (D13)</div>
+          <ul class="lista" style="font-size:12.5px; gap:6px;">
+            <li>Visual distinto do SeuGado: barra superior clara e cantos de 10 px com borda de 1 px.</li>
+            <li>Em <strong>360 px</strong>, as 7 abas viram barra inferior fixa sem truncamento nem rolagem horizontal.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>07 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 8 · AGENTE + GEMINI EXPLICÁVEL ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Inteligência Artificial Responsável (SPEC-001 / SPEC-005)</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Regras determinísticas decidem; Gemini apenas explica</h1>
+  <p class="subtitulo">Decisão D4 (Risco R3): o modelo de linguagem nunca escolhe destino nem altera lotação — e se falhar ou alucinar, o sistema mantém o texto seguro da regra.</p>
+
+  <div class="corpo">
+    <div class="grid-60-40">
+      <div class="frame-web">
+        <div class="frame-bar">
+          <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
+          <span class="frame-url">https://maneja.tech/plano · Gemini 3.5 Flash-Lite ao vivo</span>
+        </div>
+        <img src="img/plano-ia.jpg" alt="Tela Plano em produção mostrando selo IA com explicação gerada pelo Gemini" style="width:100%; height:auto; max-height:430px; object-fit:contain; background:#f5f2ea;" />
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:13px;">
+        <div class="card" style="padding:14px 16px; border-left:4px solid var(--petroleo);">
+          <div class="card-titulo" style="font-size:14.5px; margin-bottom:6px;">Regras auditáveis (<code>regras.py</code>)</div>
+          <ul class="lista" style="font-size:12.8px; gap:5px;">
+            <li><strong>Saída:</strong> piquete ocupado com NDVI &lt; <code>0,35</code>.</li>
+            <li><strong>Destino:</strong> livre, NDVI &ge; <code>0,50</code>, capacidade &le; <code>6 UA/ha</code> (bezerro = 0,4 UA) e não recusado nos últimos 7 dias.</li>
+            <li><strong>Clima (Open-Meteo):</strong> chuva &ge; <code>40 mm</code> adia automaticamente para o próximo dia seguro.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="padding:14px 16px; border-left:4px solid var(--barro);">
+          <div class="card-titulo" style="font-size:14.5px; margin-bottom:6px;">Salvaguardas de IA (Riscos R3 e R7)</div>
+          <ul class="lista" style="font-size:12.8px; gap:5px;">
+            <li><strong>Validador R3:</strong> exige texto &le; 400 caracteres citando origem e destino reais; fora disso, descarta.</li>
+            <li><strong>Fallback no plano gratuito:</strong> cascata automática <code>3.5-flash-lite</code> &rarr; <code>3.1-flash-lite</code> &rarr; <code>3.6-flash</code> &rarr; <code>3.8-flash</code> em até 22 s.</li>
+            <li><strong>Controle de cota (R7):</strong> teto diário por instância; HTTP 429 ou timeout nunca derrubam o plano.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>08 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 9 · CAMPO: PLANEJADO x REALIZADO ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Diferencial do Sistema (SPEC-002 / SPEC-003 / SPEC-011)</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Tela Campo: fechando o ciclo planejado × realizado</h1>
+  <p class="subtitulo">As coleiras GPS comparam onde o rebanho deveria estar (cadastro/plano) com onde os animais realmente estão (posições recentes).</p>
+
+  <div class="corpo">
+    <div class="grid-60-40">
+      <div class="frame-web">
+        <div class="frame-bar">
+          <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
+          <span class="frame-url">https://maneja.tech/campo</span>
+        </div>
+        <img src="img/campo-desktop.png" alt="Tela Campo mostrando simulador, ocupação por piquete e verificação divergente" style="height:415px; object-fit:cover; object-position:top center;" />
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="card" style="padding:14px 16px;">
+          <div class="card-titulo" style="font-size:14.5px; margin-bottom:8px;">Classificação automática da execução</div>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:12.8px; line-height:1.38;">
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              <span class="badge badge-petroleo" style="min-width:86px; justify-content:center;">Cumprida</span>
+              <span>&ge; 75% das coleiras do lote observadas dentro do piquete de destino.</span>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              <span class="badge badge-barro" style="min-width:86px; justify-content:center;">Pendente</span>
+              <span>Lote ainda na origem dentro da janela prevista (data + 1 dia).</span>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              <span class="badge badge-erro" style="min-width:86px; justify-content:center;">Divergente</span>
+              <span>Prazo vencido e gado fora do destino (ou movido para piquete errado).</span>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              <span class="badge" style="min-width:86px; justify-content:center; background:#ece8de; color:#5e6b70;">Sem dados</span>
+              <span>Menos de 3 coleiras com sinal recente (últimas 6 h).</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-escuro" style="padding:14px 16px;">
+          <div class="card-titulo" style="font-size:14px; margin-bottom:4px;">Simulador para demonstração</div>
+          <p style="font-size:12.5px; line-height:1.42;">
+            Ativado só com <code>VITE_MODO_DEMO=1</code>: permite mover as coleiras para o piquete certo ou errado e avançar dias para demonstrar <strong>Cumprida</strong> e <strong>Divergente</strong> ao vivo, persistindo tudo no Supabase.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>09 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 10 · INTEGRAÇÃO SEUGADO ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Fronteira de Sistemas &amp; Integração (SPEC-003 / SPEC-012)</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Independência e integração opcional com o SeuGado</h1>
+  <p class="subtitulo">Decisão D3: dois sistemas independentes que se complementam por contrato HTTP estável — o Maneja nunca depende do SeuGado para subir, testar ou demonstrar.</p>
+
+  <div class="corpo" style="gap:18px;">
+    <div class="card" style="padding:20px 24px;">
+      <svg viewBox="0 0 1100 185" width="100%" height="175" xmlns="http://www.w3.org/2000/svg" font-family="Manrope, DejaVu Sans, sans-serif">
+        <!-- SeuGado -->
+        <rect x="10" y="14" width="330" height="156" rx="10" fill="#fbf9f4" stroke="#ded8cb" stroke-width="2" />
+        <text x="30" y="40" font-size="11" font-weight="800" fill="#5e6b70" letter-spacing="1.2">SISTEMA EXTERNO (OPCIONAL)</text>
+        <text x="30" y="66" font-size="20" font-weight="800" fill="#1e2a2f">SeuGado / PiqueTech</text>
+        <text x="30" y="88" font-size="13" font-weight="700" fill="#a65e20">Papel: “Cérebro” otimizador</text>
+        <text x="30" y="112" font-size="12" fill="#5e6b70">• Massa de forragem (SAFER) e restrições</text>
+        <text x="30" y="131" font-size="12" fill="#5e6b70">• Ordem do dia ao pecuarista via Telegram</text>
+        <text x="30" y="150" font-size="12" fill="#5e6b70">• Fora do escopo lá: hardware / coleiras GPS</text>
+
+        <!-- Seta 1: SeuGado -> Maneja -->
+        <line x1="342" y1="62" x2="720" y2="62" stroke="#1f5a73" stroke-width="2.4" />
+        <polygon points="720,62 708,56 708,68" fill="#1f5a73" />
+        <rect x="406" y="24" width="250" height="30" rx="6" fill="#d6e6ec" />
+        <text x="531" y="43" text-anchor="middle" font-size="12" font-weight="800" fill="#173f50">(1) GET /fazendas/{id}/plano/atual</text>
+        <text x="531" y="80" text-anchor="middle" font-size="11.5" fill="#5e6b70">Plano externo com cache 10 min + retry 401</text>
+
+        <!-- Seta 2: Maneja -> SeuGado -->
+        <line x1="720" y1="126" x2="342" y2="126" stroke="#c8742b" stroke-width="2.4" />
+        <polygon points="342,126 354,120 354,132" fill="#c8742b" />
+        <rect x="406" y="136" width="250" height="30" rx="6" fill="#f4e3d2" />
+        <text x="531" y="155" text-anchor="middle" font-size="12" font-weight="800" fill="#a65e20">(2) GET /integracao/v1/execucoes</text>
+        <text x="531" y="116" text-anchor="middle" font-size="11.5" fill="#5e6b70">Status observado pelas coleiras (cumprida / divergente)</text>
+
+        <!-- Maneja -->
+        <rect x="726" y="14" width="364" height="156" rx="10" fill="#173f50" />
+        <text x="746" y="40" font-size="11" font-weight="800" fill="#f4c598" letter-spacing="1.2">NOSSO SISTEMA (EQUIPE DELTA)</text>
+        <text x="746" y="66" font-size="20" font-weight="800" fill="#ffffff">Maneja</text>
+        <text x="746" y="88" font-size="13" font-weight="700" fill="#8cd3f0">Papel: “Olhos” no campo e painel explicável</text>
+        <text x="746" y="112" font-size="12" fill="#d6e6ec">• Coleiras GPS + ocupação por piquete</text>
+        <text x="746" y="131" font-size="12" fill="#d6e6ec">• Vínculo opcional via piquete.externo_id</text>
+        <text x="746" y="150" font-size="12" fill="#d6e6ec">• Se a API cair: aviso suave e segue operando</text>
+      </svg>
+    </div>
+
+    <div class="grid-3">
+      <div class="card" style="padding:15px 18px;">
+        <span class="badge badge-petroleo" style="margin-bottom:8px;">MANEJA_SEUGADO_MODO=desligado</span>
+        <div class="card-titulo" style="font-size:15px;">Modo padrão independente</div>
+        <p style="font-size:13px; color:var(--suave); line-height:1.42;">O Maneja gera o próprio plano e verifica tudo sozinho. Usado em produção em <code>maneja.tech</code>.</p>
+      </div>
+      <div class="card" style="padding:15px 18px;">
+        <span class="badge badge-barro" style="margin-bottom:8px;">MANEJA_SEUGADO_MODO=arquivo</span>
+        <div class="card-titulo" style="font-size:15px;">Demo de contrato sem rede</div>
+        <p style="font-size:13px; color:var(--suave); line-height:1.42;">Lê JSON no formato real do SeuGado (<code>exemplos/plano-seugado.json</code>) e exibe origem <strong>SeuGado</strong> em Campo.</p>
+      </div>
+      <div class="card" style="padding:15px 18px;">
+        <span class="badge badge-ok" style="margin-bottom:8px;">MANEJA_SEUGADO_MODO=api</span>
+        <div class="card-titulo" style="font-size:15px;">Integração real (SPEC-012)</div>
+        <p style="font-size:13px; color:var(--suave); line-height:1.42;">Autentica via OAuth2 form (<code>/auth/token</code>), suporta token sem <code>expires_in</code>, faz cache de 10 min e trata 404/5xx sem travar.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>10 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 11 · QUALIDADE, BDD & CONJUNTO-OURO ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Qualidade &amp; Verificação (SPEC-016 / Rodada AB2)</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Evidências de qualidade: 105 testes e 90% no conjunto-ouro</h1>
+  <p class="subtitulo">Toda a suíte roda sem acesso à rede externa (HTTP simulado + PostgreSQL embutido via <code>pgserver</code>), garantindo repetibilidade.</p>
+
+  <div class="corpo" style="gap:14px; margin-top:14px;">
+    <div class="grid-4">
+      <div class="kpi">
+        <div class="kpi-num">105</div>
+        <div class="kpi-rotulo">Testes automatizados</div>
+        <div class="kpi-desc">100% passando em ~3,8 s (<code>uv run pytest</code>), cobrindo 10 <code>.feature</code> + 6 threads PG.</div>
+      </div>
+      <div class="kpi destaque">
+        <div class="kpi-num">90%</div>
+        <div class="kpi-rotulo">Conjunto-ouro (27/30)</div>
+        <div class="kpi-desc">Meta da Atividade 7 atingida com gabaritos escritos antes da execução (SPEC-016).</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-num">0</div>
+        <div class="kpi-rotulo">Violações de regra</div>
+        <div class="kpi-desc">Nenhuma movimentação inválida nos 30 casos de borda auditados por <code>validar_movimento</code>.</div>
+      </div>
+      <div class="kpi destaque">
+        <div class="kpi-num">0</div>
+        <div class="kpi-rotulo">Vulnerabilidades &amp; Sev. 1/2</div>
+        <div class="kpi-desc"><code>npm audit</code> zerado, <code>tsc -b</code> + <code>vite build</code> limpos e E2E aprovado em 360 px e produção.</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card" style="padding:14px 16px;">
+        <div class="card-titulo" style="font-size:15px; margin-bottom:6px;">Cobertura da suíte BDD (105 testes)</div>
+        <table style="font-size:12px;">
+          <thead><tr><th style="padding:7px 10px;">Módulo de teste</th><th style="padding:7px 8px;">Qtd</th><th style="padding:7px 10px;">O que garante</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:6px 10px;"><code>test_gemini.py</code></td><td style="padding:6px 8px;"><strong>45</strong></td><td style="padding:6px 10px;">R1–R4, cota R7, fallback 4 modelos gratuitos, R3 sem vazar chave</td></tr>
+            <tr><td style="padding:6px 10px;"><code>test_integracoes</code> + <code>ndvi</code></td><td style="padding:6px 8px;"><strong>14</strong></td><td style="padding:6px 10px;">Open-Meteo (cache/fallback), SeuGado API (401/404/TTL), Sentinel-2</td></tr>
+            <tr><td style="padding:6px 10px;"><code>test_persistencia.py</code></td><td style="padding:6px 8px;"><strong>9</strong></td><td style="padding:6px 10px;">PostgreSQL, transação atômica, modo sem estado e 6 acessos paralelos</td></tr>
+            <tr><td style="padding:6px 10px;"><code>test_api</code> + <code>autenticacao</code></td><td style="padding:6px 8px;"><strong>16</strong></td><td style="padding:6px 10px;">Endpoints REST, 409 em piquete ocupado, JWT HS256 + PBKDF2</td></tr>
+            <tr><td style="padding:6px 10px;"><code>agente</code> + <code>coleiras</code> + <code>verif.</code> + <code>ouro</code></td><td style="padding:6px 8px;"><strong>21</strong></td><td style="padding:6px 10px;">Regras de manejo, GPS, planejado × realizado e meta 90% conjunto-ouro</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:14px 18px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="card-titulo" style="font-size:15px; margin-bottom:6px;">Transparência do Conjunto-Ouro (<code>docs/05-conjunto-ouro.md</code>)</div>
+          <p style="font-size:12.8px; color:var(--suave); line-height:1.42; margin-bottom:8px;">
+            Os 30 casos cobrem capacidade (UA/ha), disputa entre dois rebanhos, chuva forte, recusas recentes, leitura antiga e empates. Em vez de “maquiar” regras, os <strong>3 casos não plausíveis</strong> ficaram registrados para evolução futura:
+          </p>
+          <ul class="lista" style="font-size:12.6px; gap:6px;">
+            <li><strong>C15 · Chuva forte a semana toda:</strong> agente marcou dia 0 quando não houve dia seco na janela de 7 dias.</li>
+            <li><strong>C17 · Destino com NDVI de 40 dias:</strong> regra atual aceita com confiança baixa; gabarito preferiu bloquear.</li>
+            <li><strong>C20 · Origem com leitura de 30 dias:</strong> mesma discussão de limiar de obsolescência de NDVI (critério 1.1.1).</li>
+          </ul>
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:var(--petroleo); font-weight:700;">
+          Reproduzir: <code>uv run python -m maneja.conjunto_ouro --relatorio</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>11 / 12</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 12 · DEMO AO VIVO & ENCERRAMENTO ==================== -->
+<section class="slide">
+  <div class="topo">
+    <span class="kicker">Demonstração Presencial &amp; Encerramento</span>
+    <span class="marca-mini">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4 17 L11 10 L27 13 L28 24 L10 28 Z" fill="#d6e6ec" stroke="#1f5a73" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 4 C14.1 4 11.8 6.3 11.8 9.2 C11.8 13.2 17 19.5 17 19.5 C17 19.5 22.2 13.2 22.2 9.2 C22.2 6.3 19.9 4 17 4 Z" fill="#c8742b"/><circle cx="17" cy="9.2" r="2" fill="#fff"/></svg>
+      Maneja
+    </span>
+  </div>
+  <h1>Roteiro da demonstração ao vivo e próximos passos</h1>
+  <p class="subtitulo">Tudo rodando em produção em <strong>https://maneja.tech</strong> — agora vamos mostrar o fluxo completo ao vivo.</p>
+
+  <div class="corpo" style="gap:15px; margin-top:16px;">
+    <div class="demo-lista">
+      <div class="demo-passo">
+        <span class="demo-n">1</span>
+        <div>
+          <strong>Mapa, NDVI e Coleiras GPS</strong>
+          <span>Entrar em <code>maneja.tech</code>, mostrar os 5 piquetes coloridos por NDVI e ligar <em>Mostrar coleiras GPS</em>.</span>
+        </div>
+      </div>
+      <div class="demo-passo">
+        <span class="demo-n">2</span>
+        <div>
+          <strong>Plano da Semana + Open-Meteo + IA</strong>
+          <span>Clicar em <em>Gerar plano</em>: previsão real, recomendação Abóbora &rarr; Macarrão e explicação com selo <strong>IA</strong> (Gemini).</span>
+        </div>
+      </div>
+      <div class="demo-passo">
+        <span class="demo-n">3</span>
+        <div>
+          <strong>Confirmação + Persistência Real</strong>
+          <span>Aceitar a movimentação e recarregar a página para comprovar a gravação transacional no Supabase.</span>
+        </div>
+      </div>
+      <div class="demo-passo">
+        <span class="demo-n">4</span>
+        <div>
+          <strong>Campo · Execução Cumprida</strong>
+          <span>No simulador em <code>/campo</code>, levar o lote ao Piquete Macarrão e ver <strong>Cumprida (100%)</strong> + <strong>Confere</strong>.</span>
+        </div>
+      </div>
+      <div class="demo-passo">
+        <span class="demo-n">5</span>
+        <div>
+          <strong>Campo · Desvio e Divergência</strong>
+          <span>Simular gado no Piquete Feijão, avançar 2 dias e mostrar <strong>Divergente</strong> + borda vermelha no Mapa.</span>
+        </div>
+      </div>
+      <div class="demo-passo">
+        <span class="demo-n">6</span>
+        <div>
+          <strong>SDD + BDD + Conjunto-Ouro</strong>
+          <span>Abrir <code>CLAUDE.md</code>, <code>specs/</code>, <code>docs/uml/</code> e rodar <code>uv run pytest</code> (105 passed) no terminal.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-escuro" style="display:grid; grid-template-columns: 1.35fr 1fr; gap:24px; align-items:center; padding:18px 24px;">
+      <div>
+        <div style="font-size:12px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:#f4c598; margin-bottom:6px;">
+          Evolução pós-MVP
+        </div>
+        <p style="font-size:13.5px; line-height:1.48; color:#e4eff3;">
+          Integração de coleiras físicas LoRaWAN/GPS via <code>POST /coleiras/posicoes</code> · rotina agendada de NDVI Sentinel-2 · ADR de confirmação automática no SeuGado · suporte a múltiplas fazendas · revisão dos 3 casos de borda do conjunto-ouro.
+        </p>
+      </div>
+      <div style="border-left:1px solid rgba(255,255,255,0.2); padding-left:22px;">
+        <div style="font-size:20px; font-weight:800; color:#fff; margin-bottom:6px;">Obrigado! Perguntas?</div>
+        <div style="font-size:13px; color:#b9cdd5; line-height:1.55;">
+          Painel: <strong style="color:#fff;">https://maneja.tech</strong><br />
+          API Docs: <strong style="color:#fff;">https://api.maneja.tech/docs</strong><br />
+          Equipe Delta · Sistemas de Informação · UFAL
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><strong>Maneja</strong> · Equipe Delta · UFAL · AB2 2026</span>
+    <span>12 / 12</span>
+  </div>
+</section>
+
+</body>
+</html>

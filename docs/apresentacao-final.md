@@ -1,21 +1,24 @@
-# Demonstração final da AB2 · 26/11
+# Demonstração final da AB2 · qui 26/11/2026 (presencial)
 
-## Preparação
+- **Slides (12 slides, 16:9, PDF pronto para projetor):** [Maneja-Apresentacao-Final-AB2.pdf](apresentacao/Maneja-Apresentacao-Final-AB2.pdf) (fonte em [slides.html](apresentacao/slides.html)).
+- **Produção:** https://maneja.tech (front) · https://api.maneja.tech (API) · https://api.maneja.tech/docs (OpenAPI).
 
-- Abra a API com a fazenda de demonstração e o front com `VITE_API_URL=http://localhost:8000` e `VITE_MODO_DEMO=1`. Use uma instância de demonstração, com `MANEJA_PERDA_SINAL=0` para tornar a apresentação reproduzível.
-- Comece com o SeuGado desligado. Deixe outra instância preparada com `MANEJA_SEUGADO_MODO=arquivo` para mostrar o contrato com o plano externo. O exemplo tem datas fixas de 19 e 21/11, então ensaie o vínculo e o status com antecedência.
-- Abra o mapa, o plano e a tela Campo. Tenha o terminal em `backend/` com as dependências instaladas. Consulte o [guia de deploy](04-deploy.md) para a apresentação hospedada.
+## Preparação antes de entrar em sala
 
-## Roteiro
+1. *(Opcional — para começar a demo com o gado ainda no Piquete Abóbora)* No **SQL Editor** do Supabase, rode:
+   ```sql
+   TRUNCATE fazenda, movimentacao, plano_atual, coleira, posicao, grupo_externo, parametro CASCADE;
+   ```
+   Ao abrir `https://maneja.tech`, o backend recria automaticamente os 5 piquetes e as 10 coleiras (`MANEJA_SEMEAR=1`).
+2. Deixe abertas duas abas no navegador: `https://maneja.tech` (já autenticado) e o repositório no GitHub (`CLAUDE.md`, `specs/` e `docs/uml/`).
+3. Tenha um terminal aberto em `maneja/backend` pronto para rodar `uv run pytest` (105 testes, ~4 s, 100% sem rede).
+4. *(Plano B offline, caso falte internet na sala)* A mesma aplicação roda localmente com `cd backend && MANEJA_PERDA_SINAL=0 uv run uvicorn maneja.api:app` + `VITE_API_URL=http://localhost:8000 VITE_MODO_DEMO=1 npm run dev`, ou com `MANEJA_SEUGADO_MODO=arquivo` para demonstrar o contrato do SeuGado.
 
-1. No **Mapa**, mostre os piquetes e a escala de NDVI. Ative **Mostrar coleiras GPS** para ver as posições observadas.
-2. Em **Plano**, clique em **Gerar plano**. Mostre a recomendação de Abóbora para Macarrão, a regra de destino e a origem do texto da explicação. Se o Gemini estiver indisponível, a explicação da regra mantém a demonstração utilizável.
-3. Aceite a movimentação. Em **Campo**, mostre a verificação pendente e compare o piquete previsto com a posição observada antes da execução.
-4. Selecione a movimentação e Macarrão em **Piquete observado**. Clique em **Levar gado no campo**. Mostre a verificação **Cumprida** e volte ao **Mapa** para localizar as coleiras.
-5. Mova as mesmas coleiras para outro piquete pelo simulador. Avance dois dias, em dois cliques separados. Mostre **Divergente**, a fração no destino e a diferença entre esperado e observado na tabela.
-6. Abra a instância em modo arquivo. Em **Campo**, mostre uma verificação identificada como **SeuGado**. Explique o vínculo dos piquetes e o aviso exibido quando o plano externo está indisponível.
-7. Abra `CLAUDE.md`, uma [spec](../specs/SPEC-011-telas-coleiras-verificacao.md) e os [diagramas UML](uml/README.md). Rode `uv run pytest` em `backend/` e mostre como os cenários cobrem as regras e os caminhos de falha.
+## Roteiro ao vivo
 
-## Vídeo de reserva · 25/11
-
-Grave o roteiro após o ensaio em uma instância com dados de demonstração. Deixe visíveis o retorno do simulador, os dois status de verificação, a origem SeuGado e o resultado do pytest. Revise a gravação e confira se ela pode ser reproduzida sem conexão.
+1. **Mapa (`https://maneja.tech/mapa`):** mostre os 5 piquetes na escala de NDVI e ligue **Mostrar coleiras GPS**.
+2. **Plano (`https://maneja.tech/plano`):** mostre a previsão real (**Open-Meteo**), clique em **Gerar plano**, apresente a recomendação `Piquete Abóbora → Piquete Macarrão`, a regra determinística (descarte do Jerimum por capacidade) e a explicação com o selo **IA** (Gemini com validador R3 e fallback gratuito).
+3. **Persistência:** clique em **Confirmar movimentação** e recarregue a página (`F5`) para provar a gravação transacional no Supabase.
+4. **Campo — Cumprida (`https://maneja.tech/campo`):** selecione a movimentação e **Piquete Macarrão** no simulador, clique em **Levar gado no campo** e mostre **Cumprida (100% no destino)** e **Confere** na tabela de ocupação.
+5. **Campo — Divergente:** mova as mesmas coleiras para **Piquete Feijão**, clique em **Avançar 1 dia** duas vezes e mostre **Divergente (0% no destino)**, **Diverge** na tabela e as bordas vermelhas no **Mapa**.
+6. **SDD + BDD + Conjunto-Ouro:** mostre `CLAUDE.md`, uma spec (`specs/SPEC-011-telas-coleiras-verificacao.md`), os diagramas em `docs/uml/` e rode `uv run pytest` (**105 passed**, incluindo o conjunto-ouro 27/30 = 90% e 0 violações).
