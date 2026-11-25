@@ -95,7 +95,7 @@ def criar_app(sistema: Sistema | None = None, auth: ConfigAuth | None = None, re
     if sem_estado:
         @app.middleware("http")
         async def sistema_por_requisicao(request: Request, call_next):
-            if request.method == "OPTIONS":
+            if request.method == "OPTIONS" or request.url.path == "/auth/token":
                 return await call_next(request)
             marca = _sistema_da_requisicao.set(await run_in_threadpool(montar_sistema, config))
             try:

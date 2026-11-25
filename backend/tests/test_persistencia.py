@@ -192,3 +192,16 @@ def varias(ctx, n):
 def posicoes_no_banco(url, n):
     with psycopg.connect(url) as conn:
         assert conn.execute("SELECT count(*) FROM posicao").fetchone()[0] == n
+
+
+def test_acessos_concorrentes_no_cold_start_nao_geram_deadlock(banco_limpo):
+    """Simula 6 requisições paralelas no 1º acesso da Vercel (banco vazio + coleiras)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    cfg = _config(banco_limpo)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        sistemas = list(pool.map(lambda _: montar_sistema(cfg, inicio=INICIO), range(6)))
+    assert all(len(s.repo.piquetes) == 5 for s in sistemas)
+    with psycopg.connect(banco_limpo) as conn:
+        assert conn.execute("SELECT count(*) FROM piquete").fetchone()[0] == 5
+        assert conn.execute("SELECT count(*) FROM coleira").fetchone()[0] == 10

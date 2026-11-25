@@ -32,6 +32,7 @@ from .repositorio import RepositorioMemoria
 
 SCHEMA = Path(__file__).resolve().parent.parent / "db" / "schema.sql"
 POSICOES_CARREGADAS_H = 24  # só as posições recentes interessam (ocupação e verificação usam 6 h)
+LOCK_TRANSACAO_ID = 77123456  # advisory lock por transação (seguro no pooler 6543 do Supabase)
 
 
 def conectar(url: str) -> psycopg.Connection:
@@ -68,17 +69,19 @@ class RepositorioPg(RepositorioMemoria):
     @classmethod
     def abrir(cls, url: str, semente: RepositorioMemoria | None) -> RepositorioPg:
         """Cria as tabelas, carrega o estado e, com o banco vazio, grava `semente` (a fazenda de demonstração)."""
-        with conectar(url) as conn:
-            # aplica o schema só se faltar alguma tabela (evita locks a cada requisição no modo sem estado)
+        with conectar(url) as conn, conn.transaction():
+            # aplica o schema só se faltar alguma tabela (com lock transacional para evitar corrida no cold start)
             if conn.execute("SELECT to_regclass('public.parametro') IS NULL").fetchone()[0]:
-                conn.execute(SCHEMA.read_text(encoding="utf-8"))
+                conn.execute("SELECT pg_advisory_xact_lock(%s)", (LOCK_TRANSACAO_ID,))
+                if conn.execute("SELECT to_regclass('public.parametro') IS NULL").fetchone()[0]:
+                    conn.execute(SCHEMA.read_text(encoding="utf-8"))
             vazio = conn.execute("SELECT count(*) FROM fazenda").fetchone()[0] == 0
         if vazio:
             base = semente or RepositorioMemoria(fazenda=Fazenda("fazenda", "Minha fazenda", "America/Maceio"))
             repo = cls(url, **{f.name: getattr(base, f.name) for f in dataclasses.fields(RepositorioMemoria)})
             repo.fisico = {c.id: c.piquete_cadastro_id for c in repo.coleiras}
-            repo.salvar()
-            return repo
+            repo.salvar(apenas_se_vazio=True)
+            return cls._carregar(url)
         return cls._carregar(url)
 
     @classmethod
@@ -116,9 +119,12 @@ class RepositorioPg(RepositorioMemoria):
 
     # ---------- salvar ----------
 
-    def salvar(self) -> None:
-        """Grava o estado inteiro numa transação (tudo ou nada)."""
+    def salvar(self, *, apenas_se_vazio: bool = False) -> None:
+        """Grava o estado inteiro numa transação (tudo ou nada), serializada por advisory lock."""
         with conectar(self.url) as conn, conn.transaction():
+            conn.execute("SELECT pg_advisory_xact_lock(%s)", (LOCK_TRANSACAO_ID,))
+            if apenas_se_vazio and conn.execute("SELECT count(*) FROM fazenda").fetchone()[0] > 0:
+                return
             for tabela in ("lotacao", "leitura_ndvi", "movimentacao", "plano_atual", "coleira", "grupo_externo", "piquete", "fazenda"):
                 conn.execute(f"DELETE FROM {tabela}")  # noqa: S608 - nomes fixos
             f = self.fazenda

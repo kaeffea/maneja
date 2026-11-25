@@ -12,6 +12,8 @@ import httpx
 from ..dominio import CotaEsgotada
 
 logger = logging.getLogger(__name__)
+# Evita que o httpx grave URLs com ?key=... em logs INFO (ex.: Runtime Logs da Vercel).
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
 GEMINI_TIMEOUT_S = 15  # SPEC-005 (chamada única)
