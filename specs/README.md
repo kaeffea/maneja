@@ -59,3 +59,5 @@ O que NÃO fazer.
 | [014](SPEC-014-documentacao-sdd.md) | Documentação SDD e apresentação | feita |
 | [015](SPEC-015-identidade-visual.md) | Identidade visual própria | feita |
 | [016](SPEC-016-conjunto-ouro.md) | Conjunto-ouro do agente (30 casos, meta de 90%) | feita |
+| [017](SPEC-017-acesso-admin-clientes.md) | Acesso por papel (admin e cliente) e multi-fazenda | feita |
+| [018](SPEC-018-integracao-piquetech-bidirecional.md) | Integração bidirecional multi-fazenda com o PiqueTech | feita |

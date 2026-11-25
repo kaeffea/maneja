@@ -27,9 +27,9 @@ function corDoPiquete(resumo: ResumoPiquete | undefined): string {
 
 // ---------- controles dentro do mapa ----------
 
-function ControlesDesenho({ piquetes, aoCriar }: { piquetes: Piquete[]; aoCriar: (g: GeoJsonPolygon) => void }) {
+function ControlesDesenho({ fazendaId, piquetes, aoCriar }: { fazendaId: string; piquetes: Piquete[]; aoCriar: (g: GeoJsonPolygon) => void }) {
   const map = useMap();
-  const enquadrado = useRef(false);
+  const enquadrada = useRef<string | null>(null);
 
   useEffect(() => {
     map.pm.setLang("pt_br");
@@ -62,13 +62,13 @@ function ControlesDesenho({ piquetes, aoCriar }: { piquetes: Piquete[]; aoCriar:
   }, [map, aoCriar]);
 
   useEffect(() => {
-    if (enquadrado.current) return;
-    enquadrado.current = true;
+    if (enquadrada.current === fazendaId) return;
+    enquadrada.current = fazendaId;
     const pontos = piquetes.flatMap((p) => posicoes(p.geometria));
     const limites = L.latLngBounds(pontos);
     if (limites.isValid()) map.fitBounds(limites, { padding: [40, 40], maxZoom: 17 });
     else map.setView([-9.62, -35.97], 15);
-  }, [map, piquetes]);
+  }, [map, fazendaId, piquetes]);
 
   return null;
 }
@@ -109,20 +109,20 @@ function BuscaCoordenadas() {
 // ---------- página ----------
 
 export default function Mapa() {
-  const { estado, hoje, modo, criarPiquete, atualizarGeometria, desativarPiquete } = useFazenda();
+  const { estado, fazenda, hoje, modo, criarPiquete, atualizarGeometria, desativarPiquete } = useFazenda();
   const [mostrarColeiras, setMostrarColeiras] = useState(false);
   const [coleiras, setColeiras] = useState<Coleira[]>([]);
   const [erroColeiras, setErroColeiras] = useState("");
 
   useEffect(() => {
-    if (!mostrarColeiras || modo !== "api") return;
+    if (!mostrarColeiras || modo !== "api" || !fazenda.id) return;
     let ativo = true;
-    api.coleiras().then(
+    api.coleiras(fazenda.id).then(
       (dados) => { if (ativo) setColeiras(dados); },
       (falha: unknown) => { if (ativo) setErroColeiras(mensagemDeErro(falha)); },
     );
     return () => { ativo = false; };
-  }, [mostrarColeiras, modo]);
+  }, [mostrarColeiras, modo, fazenda.id]);
   const piquetes = estado.piquetes;
   const resumos = resumoPiquetes(piquetes, estado.ndvi, estado.lotacao, hoje);
   const plano = estado.plano;
@@ -205,7 +205,7 @@ export default function Mapa() {
             maxNativeZoom={19}
             className="mapa-cinza"
           />
-          <ControlesDesenho piquetes={piquetes} aoCriar={aoDesenhar} />
+          <ControlesDesenho fazendaId={fazenda.id} piquetes={piquetes} aoCriar={aoDesenhar} />
           <FocoNoPiquete piquete={selecionado} />
           <BuscaCoordenadas />
 

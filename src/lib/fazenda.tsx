@@ -1,7 +1,19 @@
 // Estado da aplicação. Com VITE_API_URL definida, tudo vem da API (backend/);
-// sem ela, roda o modo demonstração em memória (decisão D7, SPEC-010).
+// sem ela, roda o modo demonstração em memória (decisão D7, SPEC-010, SPEC-017).
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { api, carregarBase, EVENTO_SESSAO_EXPIRADA, lerToken, mensagemDeErro, sair, USAR_API, API_URL } from "./api";
+import { useNavigate } from "react-router";
+import {
+  api,
+  API_URL,
+  carregarBase,
+  EVENTO_SESSAO_EXPIRADA,
+  guardarFazendaSalva,
+  lerFazendaSalva,
+  lerToken,
+  mensagemDeErro,
+  sair,
+  USAR_API,
+} from "./api";
 import Login from "../paginas/Login";
 import { gerarRecomendacao } from "./agente";
 import { hojeNaFazenda } from "./datas";
@@ -10,10 +22,11 @@ import { areaHa } from "./geo";
 import { ultimaLeitura } from "./ndvi";
 import { lotacaoDe, totalAnimais } from "./rebanho";
 import { validarMovimento } from "./regras";
-import type { Fazenda, GeoJsonPolygon, Movimentacao, PlanoManejo, Rebanho } from "./tipos";
+import type { Fazenda, GeoJsonPolygon, Lote, Movimentacao, PlanoManejo, Rebanho, Usuario } from "./tipos";
 
 export interface EstadoDemo extends Base {
   plano: PlanoManejo | null;
+  lotes: Lote[];
 }
 
 export type DadosFazenda = Pick<Fazenda, "nome">;
@@ -27,10 +40,14 @@ export interface NovoPiquete {
 // As ações devolvem uma mensagem de erro (ou null) quando podem ser recusadas.
 interface Contexto {
   modo: "api" | "demo";
-  usuario: typeof USUARIO;
+  usuario: Usuario;
   estado: EstadoDemo;
   fazenda: Fazenda;
+  fazendas: Fazenda[];
+  lotes: Lote[];
   hoje: string;
+  selecionarFazenda: (fazendaId: string) => void;
+  recarregarFazendas: (selecionarId?: string) => Promise<void>;
   salvarFazenda: (dados: DadosFazenda) => Promise<string | null>;
   criarPiquete: (dados: NovoPiquete) => Promise<string>;
   atualizarGeometria: (piqueteId: string, geometria: GeoJsonPolygon) => Promise<string | null>;
@@ -46,6 +63,13 @@ const ContextoFazenda = createContext<Contexto | null>(null);
 
 const FUSO = "America/Maceio";
 const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const USUARIO_DEMO: Usuario = {
+  id: "demo",
+  email: "demo@maneja.app",
+  nome: USUARIO.nome,
+  papel: "cliente",
+  cliente_id: null,
+};
 
 function recomendar(base: Base, hoje: string, agora?: Date): PlanoManejo {
   const { piquetes, ndvi, clima, lotacao, historico } = base;
@@ -59,15 +83,13 @@ function comMovimentacao(plano: PlanoManejo, mov: Movimentacao): PlanoManejo {
 function estadoInicial(): EstadoDemo {
   const hoje = hojeNaFazenda(FUSO);
   const base = baseInicial(hoje);
-  // a demonstração já começa com um plano
   const geradoAs = new Date();
   geradoAs.setHours(7, 48, 0, 0);
-  return { ...base, plano: recomendar(base, hoje, geradoAs) };
+  return { ...base, lotes: [], plano: recomendar(base, hoje, geradoAs) };
 }
 
 function ProviderDemo({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<EstadoDemo>(estadoInicial);
-  // cópia síncrona do estado: `alterar` é o único caminho de escrita e a mantém em dia
   const atual = useRef(estado);
 
   const fazenda = estado.fazenda;
@@ -135,14 +157,12 @@ function ProviderDemo({ children }: { children: ReactNode }) {
   }
 
   async function gerarPlano(): Promise<PlanoManejo> {
-    await espera(1600); // simula a consulta ao NDVI, ao clima e o tempo de análise do agente
+    await espera(1600);
     const plano = recomendar(atual.current, hoje);
     alterar((e) => ({ ...e, plano }));
     return plano;
   }
 
-  // Aceitar a recomendação (ou escolher outro destino) registra a movimentação:
-  // o rebanho passa a ocupar o destino a partir de hoje e o mapa se atualiza.
   async function executarMovimentacao(movimentacaoId: string, destinoId?: string): Promise<string | null> {
     const e = atual.current;
     const plano = e.plano;
@@ -193,10 +213,14 @@ function ProviderDemo({ children }: { children: ReactNode }) {
     <ContextoFazenda.Provider
       value={{
         modo: "demo",
-        usuario: USUARIO,
+        usuario: USUARIO_DEMO,
         estado,
         fazenda,
+        fazendas: [fazenda],
+        lotes: [],
         hoje,
+        selecionarFazenda: () => undefined,
+        recarregarFazendas: async () => undefined,
         salvarFazenda,
         criarPiquete,
         atualizarGeometria,
@@ -212,42 +236,93 @@ function ProviderDemo({ children }: { children: ReactNode }) {
   );
 }
 
-// ---------- modo API ----------
+// ---------- modo API (multi-fazenda + papéis admin/cliente) ----------
 
 function ProviderApi({ children }: { children: ReactNode }) {
+  const navegar = useNavigate();
   const [logado, setLogado] = useState(() => lerToken() !== null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [fazendas, setFazendas] = useState<Fazenda[]>([]);
+  const [fazendaAtivaId, setFazendaAtivaId] = useState<string | null>(() => lerFazendaSalva());
   const [estado, setEstado] = useState<EstadoDemo | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  const recarregar = useCallback(async (): Promise<EstadoDemo> => {
-    const base = await carregarBase();
+  const deslogar = useCallback(() => {
+    sair();
+    setUsuario(null);
+    setFazendas([]);
+    setFazendaAtivaId(null);
+    setEstado(null);
+    setLogado(false);
+    navegar("/mapa", { replace: true });
+  }, [navegar]);
+
+  // 401 em qualquer chamada: volta para o login (critério de qualidade 4.2)
+  useEffect(() => {
+    const expirou = () => {
+      deslogar();
+      setAviso("Sua sessão expirou. Entre de novo.");
+    };
+    window.addEventListener(EVENTO_SESSAO_EXPIRADA, expirou);
+    return () => window.removeEventListener(EVENTO_SESSAO_EXPIRADA, expirou);
+  }, [deslogar]);
+
+  const carregarSessaoEFazendas = useCallback(async (preferida?: string): Promise<string | null> => {
+    const [me, lista] = await Promise.all([api.me(), api.fazendas()]);
+    setUsuario(me);
+    setFazendas(lista);
+    const salva = preferida ?? lerFazendaSalva();
+    const valida = salva && lista.some((f) => f.id === salva) ? salva : (lista[0]?.id ?? null);
+    setFazendaAtivaId(valida);
+    guardarFazendaSalva(valida);
+    setErro(null);
+    return valida;
+  }, []);
+
+  const recarregarFazendaAtiva = useCallback(async (id: string): Promise<EstadoDemo> => {
+    const base = await carregarBase(id);
     setEstado(base);
     setErro(null);
     return base;
   }, []);
 
-  // 401 em qualquer chamada: volta para o login (critério de qualidade 4.2)
-  useEffect(() => {
-    const expirou = () => {
-      setLogado(false);
-      setEstado(null);
-      setAviso("Sua sessão expirou. Entre de novo.");
-    };
-    window.addEventListener(EVENTO_SESSAO_EXPIRADA, expirou);
-    return () => window.removeEventListener(EVENTO_SESSAO_EXPIRADA, expirou);
-  }, []);
-
   useEffect(() => {
     if (!logado) return;
-    recarregar().catch((e: unknown) => setErro(mensagemDeErro(e)));
-  }, [logado, recarregar]);
+    carregarSessaoEFazendas().catch((e: unknown) => setErro(mensagemDeErro(e)));
+  }, [logado, carregarSessaoEFazendas]);
+
+  useEffect(() => {
+    if (!logado || !fazendaAtivaId) return;
+    recarregarFazendaAtiva(fazendaAtivaId).catch((e: unknown) => setErro(mensagemDeErro(e)));
+  }, [logado, fazendaAtivaId, recarregarFazendaAtiva]);
+
+  const selecionarFazenda = useCallback((id: string) => {
+    guardarFazendaSalva(id);
+    setFazendaAtivaId(id);
+  }, []);
+
+  const recarregarFazendas = useCallback(async (selecionarId?: string) => {
+    const escolhida = await carregarSessaoEFazendas(selecionarId);
+    if (escolhida) {
+      await recarregarFazendaAtiva(escolhida);
+    }
+  }, [carregarSessaoEFazendas, recarregarFazendaAtiva]);
 
   if (!logado) {
-    return <Login aviso={aviso} aoEntrar={() => { setAviso(null); setErro(null); setLogado(true); }} />;
+    return (
+      <Login
+        aviso={aviso}
+        aoEntrar={() => {
+          setAviso(null);
+          setErro(null);
+          setLogado(true);
+        }}
+      />
+    );
   }
 
-  if (erro !== null && estado === null) {
+  if (erro !== null && usuario === null) {
     return (
       <div className="aviso-alerta" role="alert" style={{ margin: 24 }}>
         Não foi possível carregar os dados: {erro}. Confira se o backend está rodando em {API_URL}
@@ -255,47 +330,93 @@ function ProviderApi({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (estado === null) return <p style={{ margin: 24 }}>Carregando dados da fazenda…</p>;
 
-  // executa a ação na API e recarrega tudo; devolve a mensagem de erro, se houver
+  if (usuario === null) {
+    return <p style={{ margin: 24 }}>Carregando sessão…</p>;
+  }
+
+  if (fazendas.length === 0 && usuario.papel !== "admin") {
+    return (
+      <div className="pagina" style={{ margin: "40px auto", padding: "0 16px" }}>
+        <section className="cartao">
+          <h1 className="pagina-titulo">Bem-vindo, {usuario.nome || usuario.email}</h1>
+          <p className="cartao-subtitulo" style={{ marginTop: 8 }}>
+            Nenhuma fazenda foi vinculada à sua conta ainda. Peça ao administrador do Maneja para cadastrar ou vincular sua fazenda.
+          </p>
+          <div style={{ marginTop: 16 }}>
+            <button className="botao botao-secundario" type="button" onClick={deslogar}>Sair</button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (fazendaAtivaId && estado === null) {
+    if (erro !== null) {
+      return (
+        <div className="aviso-alerta" role="alert" style={{ margin: 24 }}>
+          Erro ao carregar a fazenda: {erro}.
+        </div>
+      );
+    }
+    return <p style={{ margin: 24 }}>Carregando dados da fazenda…</p>;
+  }
+
+  const fazendaVazia: Fazenda = { id: "", nome: "Sem fazenda", timezone: FUSO };
+  const estadoSeguro: EstadoDemo = estado ?? {
+    fazenda: fazendaVazia,
+    piquetes: [],
+    lotacao: [],
+    lotes: [],
+    ndvi: [],
+    clima: { fazenda_id: "", dias: [] },
+    historico: [],
+    plano: null,
+  };
+  const fazenda = estadoSeguro.fazenda;
+
   async function acao(fazer: () => Promise<unknown>): Promise<string | null> {
+    if (!fazenda.id) return "Nenhuma fazenda selecionada.";
     try {
       await fazer();
-      await recarregar();
+      await recarregarFazendaAtiva(fazenda.id);
       return null;
     } catch (e) {
       return mensagemDeErro(e);
     }
   }
 
-  const fazenda = estado.fazenda;
   const valor: Contexto = {
     modo: "api",
-    usuario: USUARIO,
-    estado,
+    usuario,
+    estado: estadoSeguro,
     fazenda,
+    fazendas,
+    lotes: estadoSeguro.lotes,
     hoje: hojeNaFazenda(fazenda.timezone),
-    salvarFazenda: (dados) => acao(() => api.salvarFazenda(dados.nome)),
+    selecionarFazenda,
+    recarregarFazendas,
+    salvarFazenda: async (dados) => {
+      const falha = await acao(() => api.salvarFazenda(fazenda.id, dados.nome));
+      if (!falha) await carregarSessaoEFazendas(fazenda.id);
+      return falha;
+    },
     criarPiquete: async (dados) => {
-      const piquete = await api.criarPiquete(dados.nome.trim(), dados.vegetacao.trim(), dados.geometria);
-      await recarregar();
+      const piquete = await api.criarPiquete(fazenda.id, dados.nome.trim(), dados.vegetacao.trim(), dados.geometria);
+      await recarregarFazendaAtiva(fazenda.id);
       return piquete.id;
     },
-    atualizarGeometria: (id, geometria) => acao(() => api.atualizarGeometria(id, geometria)),
-    desativarPiquete: (id) => acao(() => api.removerPiquete(id)),
+    atualizarGeometria: (id, geometria) => acao(() => api.atualizarGeometria(fazenda.id, id, geometria)),
+    desativarPiquete: (id) => acao(() => api.removerPiquete(fazenda.id, id)),
     gerarPlano: async () => {
-      const plano = await api.gerarPlano();
-      await recarregar();
+      const plano = await api.gerarPlano(fazenda.id);
+      await recarregarFazendaAtiva(fazenda.id);
       return plano;
     },
-    salvarLotacao: (id, rebanho) => acao(() => api.salvarLotacao(id, rebanho)),
-    executarMovimentacao: (id, destinoId) => acao(() => api.aceitar(id, destinoId)),
-    recusarMovimentacao: (id) => acao(() => api.recusar(id)),
-    sair: () => {
-      sair();
-      setEstado(null);
-      setLogado(false);
-    },
+    salvarLotacao: (id, rebanho) => acao(() => api.salvarLotacao(fazenda.id, id, rebanho)),
+    executarMovimentacao: (id, destinoId) => acao(() => api.aceitar(fazenda.id, id, destinoId)),
+    recusarMovimentacao: (id) => acao(() => api.recusar(fazenda.id, id)),
+    sair: deslogar,
   };
   return <ContextoFazenda.Provider value={valor}>{children}</ContextoFazenda.Provider>;
 }

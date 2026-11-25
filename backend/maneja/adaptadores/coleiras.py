@@ -35,11 +35,22 @@ class SimuladorColeiras:
             if cid in self.fisico:
                 self.fisico[cid] = piquete_id
 
-    def gerar_posicoes(self, instante: datetime) -> list[Posicao]:
+    def gerar_posicoes(self, instante: datetime, coleira_ids: set[str] | None = None) -> list[Posicao]:
         posicoes = []
         for cid, pid in self.fisico.items():
+            if coleira_ids is not None and cid not in coleira_ids:
+                continue
+            if pid not in self._piquetes:
+                continue
             if self._rng.random() < self.perda_sinal:
                 continue
             lat, lon = ponto_aleatorio(self._piquetes[pid].geometria, self._rng)
             posicoes.append(Posicao(cid, instante, lat, lon))
         return posicoes
+
+    def gerar_posicao_imediata(self, coleira_id: str, instante: datetime) -> Posicao | None:
+        pid = self.fisico.get(coleira_id)
+        if not pid or pid not in self._piquetes:
+            return None
+        lat, lon = ponto_aleatorio(self._piquetes[pid].geometria, self._rng)
+        return Posicao(coleira_id, instante, lat, lon)

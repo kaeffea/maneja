@@ -17,3 +17,5 @@ Uma linha por decisão. Para mudar uma, acrescente outra que a substitua; não a
 | D11 | 19/11 | Deploy na Vercel (front e API, região gru1) com PostgreSQL no Supabase, no lugar do Render | Mesma infraestrutura que o Kauê já opera no SeuGado; continua gratuita |
 | D12 | 19/11 | Tudo que envolve o SeuGado (SPEC-012 e a ADR do lado de lá) é com o Kauê | Ele é o dono do SeuGado |
 | D13 | 19/11 | O visual do Maneja tem identidade própria, diferente do SeuGado (SPEC-015) | São sistemas diferentes e precisam parecer diferentes |
+| D14 | 25/11 | Acesso multi-tenant no Maneja com papéis `admin` e `cliente` e verificação de acesso por fazenda no back-end (SPEC-017) | Permite administrar vários clientes e fazendas sem que um cliente veja ou altere dados de outro |
+| D15 | 25/11 | Integração bidirecional multi-fazenda com o PiqueTech via `seugado_id` / `externo_id`, removendo `MANEJA_SEUGADO_FAZENDA_ID` (SPEC-018) | Substitui o vínculo único por variável de ambiente por importação, atualização e exportação por fazenda, cobrindo todas as fazendas integradas em `/integracao/v1/execucoes` |

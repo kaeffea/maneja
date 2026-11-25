@@ -38,17 +38,19 @@ Nenhuma das duas setas é obrigatória. Sem a (1), o Maneja usa as próprias rec
 |---|---|---|
 | `desligado` (padrão) | Não lê nada. O planejado vem do próprio agente | Uso independente |
 | `arquivo` | Lê o plano de um JSON local (`MANEJA_SEUGADO_ARQUIVO`) no formato da resposta do SeuGado | Demonstração e testes, sem depender da outra equipe |
-| `api` | Chama a API do SeuGado (`MANEJA_SEUGADO_URL`, `MANEJA_SEUGADO_EMAIL`, `MANEJA_SEUGADO_SENHA`, `MANEJA_SEUGADO_FAZENDA_ID`) | Integração real |
+| `api` | Chama a API do PiqueTech (`MANEJA_SEUGADO_URL`, `MANEJA_SEUGADO_EMAIL`, `MANEJA_SEUGADO_SENHA`) para cada fazenda vinculada por `seugado_id` (SPEC-018) | Integração real multi-fazenda |
 
 Se a API do SeuGado falhar, o Maneja registra o erro, mostra "plano externo indisponível" e volta ao modo próprio. Nunca trava.
 
-### O que o Maneja lê do SeuGado (endpoints que já existem lá)
+### O que o Maneja lê e cria no PiqueTech (SPEC-018)
 
-| Endpoint do SeuGado | Uso no Maneja |
+| Endpoint do PiqueTech | Uso no Maneja |
 |---|---|
-| `POST /auth/token` | Obter o token de serviço |
-| `GET /fazendas/{id}/plano/atual` | Movimentações planejadas: `id`, `data`, `lote_id`, `lote_nome`, `piquete_origem_id`, `piquete_destino_id`, nomes, `motivo` |
-| `GET /fazendas/{id}/piquetes` | Vincular piquetes pelo id externo |
+| `POST /auth/token` | Obter o token de serviço (conta dedicada) |
+| `GET /clientes`, `GET /fazendas`, `GET /fazendas/{id}/piquetes`, `GET /fazendas/{id}/lotes` | Importar e atualizar fazendas no Maneja por UUID (upsert; piquetes removidos ficam inativos) |
+| `GET /cultivares` | Escolher cultivar ao exportar uma fazenda do Maneja |
+| `POST /clientes`, `POST /fazendas`, `POST /fazendas/{id}/piquetes`, `POST /fazendas/{id}/lotes` | Exportar uma fazenda criada no Maneja para o PiqueTech gravando os UUIDs |
+| `GET /fazendas/{seugado_id}/plano/atual` | Movimentações planejadas por fazenda integrada (cache de 10 min por fazenda) |
 
 Campos do plano usados pelo Maneja, no subconjunto de `PlanoManejo` do SeuGado:
 
@@ -76,11 +78,11 @@ O Maneja ignora os campos que não conhece. Assim, mudanças no SeuGado que só 
 
 ### Vínculo de identificadores
 
-Cada piquete do Maneja tem um campo opcional `externo_id`, com o id do piquete no SeuGado. Uma movimentação do plano externo só é verificada quando origem e destino têm vínculo. Sem vínculo, ela aparece como "sem vínculo" e não gera alerta.
+Cada cliente (`seugado_id`), fazenda (`seugado_id`), piquete (`externo_id`) e lote (`seugado_id`) do Maneja que existe no PiqueTech guarda o UUID correspondente. Fazendas sem `seugado_id` funcionam apenas no Maneja. Uma movimentação do plano externo só é verificada quando origem e destino têm vínculo ativo.
 
-### O que o Maneja expõe para o SeuGado
+### O que o Maneja expõe para o PiqueTech (em produção, ADR-035)
 
-`GET /integracao/v1/execucoes?desde=AAAA-MM-DD` (autenticado), que responde:
+`GET /integracao/v1/execucoes?desde=AAAA-MM-DD` (autenticado com `Authorization: Bearer <MANEJA_TOKEN_INTEGRACAO>`), agregando **todas** as fazendas integradas (`seugado_id` preenchido):
 
 ```json
 [

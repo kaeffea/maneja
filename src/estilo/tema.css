@@ -58,7 +58,7 @@
   --cor-confianca-baixa-fundo: #f4e3d2;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   :root {
     --altura-topo: calc(var(--altura-barra) + var(--altura-barra-inferior));
   }

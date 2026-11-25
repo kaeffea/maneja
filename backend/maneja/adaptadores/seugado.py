@@ -1,7 +1,7 @@
-"""Adaptador do SeuGado (docs/02-integracao-seugado.md).
+"""Adaptador do SeuGado / PiqueTech (docs/02-integracao-seugado.md, SPEC-012 e SPEC-018).
 
 Regra de independência: o Maneja nunca depende do SeuGado. O modo padrão é desligado,
-e qualquer falha aqui vira um aviso, nunca um erro para o usuário.
+e qualquer falha na consulta de plano vira um aviso, nunca um erro para o usuário.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import httpx
 
 TTL_TOKEN_PADRAO_S = 3000.0  # usado quando /auth/token não devolve expires_in nem JWT com exp
 MARGEM_TOKEN_S = 30.0
-TTL_PLANO_S = 600.0  # cache de 10 minutos (SPEC-012 R3)
+TTL_PLANO_S = 600.0  # cache de 10 minutos por fazenda (SPEC-012 R3 / SPEC-018 R2)
 
 
 def _ttl_token(token: str, dados: dict) -> float:
@@ -40,13 +40,13 @@ def _ttl_token(token: str, dados: dict) -> float:
 class ISeuGado(Protocol):
     modo: str
 
-    def plano_atual(self) -> dict | None: ...
+    def plano_atual(self, fazenda_id: str | None = None) -> dict | None: ...
 
 
 class SeuGadoDesligado:
     modo = "desligado"
 
-    def plano_atual(self) -> dict | None:
+    def plano_atual(self, fazenda_id: str | None = None) -> dict | None:
         return None
 
 
@@ -58,29 +58,38 @@ class SeuGadoArquivo:
     def __init__(self, caminho: str | Path) -> None:
         self.caminho = Path(caminho)
 
-    def plano_atual(self) -> dict | None:
+    def plano_atual(self, fazenda_id: str | None = None) -> dict | None:
         return json.loads(self.caminho.read_text(encoding="utf-8"))
 
 
 class SeuGadoApi:
-    """Chamada real à API do SeuGado: SPEC-012."""
+    """Cliente HTTP real da API do PiqueTech / SeuGado (SPEC-012 e SPEC-018)."""
 
     modo = "api"
 
-    def __init__(self, url: str, email: str, senha: str, fazenda_id: str,
-                 cliente_http: httpx.Client | None = None) -> None:
-        self.url, self.email, self.senha, self.fazenda_id = url.rstrip("/"), email, senha, fazenda_id
-        self.cliente_http = cliente_http or httpx.Client(timeout=10)
+    def __init__(
+        self,
+        url: str,
+        email: str,
+        senha: str,
+        fazenda_id: str = "",
+        cliente_http: httpx.Client | None = None,
+    ) -> None:
+        self.url = url.rstrip("/")
+        self.email = email
+        self.senha = senha
+        self.fazenda_id = fazenda_id  # opcional: mantido apenas por compatibilidade com testes antigos
+        self.cliente_http = cliente_http or httpx.Client(timeout=15)
         self._token = ""
         self._token_ate = 0.0
-        self._plano = None
-        self._plano_ate = 0.0
+        self._planos: dict[str, tuple[float, dict | None]] = {}
         self._trava = Lock()
 
     def _autenticar(self) -> str:
         if monotonic() >= self._token_ate:
             resposta = self.cliente_http.post(
-                f"{self.url}/auth/token", data={"username": self.email, "password": self.senha},
+                f"{self.url}/auth/token",
+                data={"username": self.email, "password": self.senha},
             )
             resposta.raise_for_status()
             dados = resposta.json()
@@ -88,21 +97,34 @@ class SeuGadoApi:
             self._token_ate = monotonic() + _ttl_token(self._token, dados)
         return self._token
 
-    def _consultar(self) -> httpx.Response:
-        fazenda = quote(self.fazenda_id, safe="")
-        return self.cliente_http.get(
-            f"{self.url}/fazendas/{fazenda}/plano/atual",
-            headers={"Authorization": f"Bearer {self._autenticar()}"},
-        )
+    def _requisitar(self, metodo: str, caminho: str, *, json_body: dict | None = None) -> httpx.Response:
+        def enviar() -> httpx.Response:
+            headers = {"Authorization": f"Bearer {self._autenticar()}"}
+            return self.cliente_http.request(metodo, f"{self.url}{caminho}", headers=headers, json=json_body)
 
-    def plano_atual(self) -> dict | None:
+        resposta = enviar()
+        if resposta.status_code == 401:
+            self._token_ate = 0.0
+            resposta = enviar()
+        return resposta
+
+    def invalidar_cache_plano(self, fazenda_id: str | None = None) -> None:
         with self._trava:
-            if monotonic() < self._plano_ate:
-                return self._plano
-            resposta = self._consultar()
-            if resposta.status_code == 401:
-                self._token_ate = 0.0
-                resposta = self._consultar()
+            if fazenda_id is None:
+                self._planos.clear()
+            else:
+                self._planos.pop(fazenda_id, None)
+
+    def plano_atual(self, fazenda_id: str | None = None) -> dict | None:
+        alvo = (fazenda_id or self.fazenda_id or "").strip()
+        if not alvo:
+            return None
+        with self._trava:
+            em_cache = self._planos.get(alvo)
+            if em_cache is not None and monotonic() < em_cache[0]:
+                return em_cache[1]
+            fazenda_q = quote(alvo, safe="")
+            resposta = self._requisitar("GET", f"/fazendas/{fazenda_q}/plano/atual")
             if resposta.status_code == 404:
                 plano = None
             else:
@@ -110,6 +132,54 @@ class SeuGadoApi:
                 plano = resposta.json()
                 if not isinstance(plano, dict):
                     raise RuntimeError("Plano inválido do SeuGado")
-            self._plano = plano
-            self._plano_ate = monotonic() + TTL_PLANO_S
+            self._planos[alvo] = (monotonic() + TTL_PLANO_S, plano)
             return plano
+
+    # ---------- leitura para importação / exportação (SPEC-018) ----------
+
+    def _get_json(self, caminho: str):
+        with self._trava:
+            resposta = self._requisitar("GET", caminho)
+            resposta.raise_for_status()
+            return resposta.json()
+
+    def _post_json(self, caminho: str, corpo: dict) -> dict:
+        with self._trava:
+            resposta = self._requisitar("POST", caminho, json_body=corpo)
+            resposta.raise_for_status()
+            dados = resposta.json()
+            if not isinstance(dados, dict):
+                raise RuntimeError(f"Resposta inesperada do PiqueTech em POST {caminho}")
+            return dados
+
+    def listar_clientes(self) -> list[dict]:
+        return list(self._get_json("/clientes"))
+
+    def listar_fazendas(self) -> list[dict]:
+        return list(self._get_json("/fazendas"))
+
+    def obter_fazenda(self, fazenda_id: str) -> dict:
+        return dict(self._get_json(f"/fazendas/{quote(fazenda_id, safe='')}"))
+
+    def listar_piquetes(self, fazenda_id: str) -> list[dict]:
+        return list(self._get_json(f"/fazendas/{quote(fazenda_id, safe='')}/piquetes"))
+
+    def listar_lotes(self, fazenda_id: str) -> list[dict]:
+        return list(self._get_json(f"/fazendas/{quote(fazenda_id, safe='')}/lotes"))
+
+    def listar_cultivares(self) -> list[dict]:
+        return list(self._get_json("/cultivares"))
+
+    # ---------- criação para exportação (SPEC-018) ----------
+
+    def criar_cliente(self, dados: dict) -> dict:
+        return self._post_json("/clientes", dados)
+
+    def criar_fazenda(self, dados: dict) -> dict:
+        return self._post_json("/fazendas", dados)
+
+    def criar_piquete(self, fazenda_id: str, dados: dict) -> dict:
+        return self._post_json(f"/fazendas/{quote(fazenda_id, safe='')}/piquetes", dados)
+
+    def criar_lote(self, fazenda_id: str, dados: dict) -> dict:
+        return self._post_json(f"/fazendas/{quote(fazenda_id, safe='')}/lotes", dados)

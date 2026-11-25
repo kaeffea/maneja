@@ -1,4 +1,4 @@
-"""Autenticação (SPEC-009): senha com PBKDF2 e token JWT HS256, sem dependência externa.
+"""Autenticação (SPEC-009 e SPEC-017): senha com PBKDF2 e token JWT HS256, sem dependência externa.
 
 Critério de qualidade 4.2: nenhuma rota de dados responde sem token válido;
 token expirado devolve 401.
@@ -20,6 +20,15 @@ VALIDADE = timedelta(hours=8)
 
 class TokenInvalido(Exception):
     """Token ausente, malformado, com assinatura errada ou expirado."""
+
+
+@dataclass(frozen=True)
+class SessaoUsuario:
+    id: str
+    email: str
+    nome: str
+    papel: str  # "admin" | "cliente"
+    cliente_id: str | None = None
 
 
 # ---------- senha ----------
@@ -52,17 +61,35 @@ def _de_b64(texto: str) -> bytes:
     return base64.urlsafe_b64decode(texto + "=" * (-len(texto) % 4))
 
 
-def emitir_token(email: str, segredo: str, agora: datetime, validade: timedelta = VALIDADE) -> tuple[str, datetime]:
+def emitir_token(
+    email: str,
+    segredo: str,
+    agora: datetime,
+    validade: timedelta = VALIDADE,
+    *,
+    papel: str = "admin",
+    cliente_id: str | None = None,
+    usuario_id: str | None = None,
+    nome: str = "",
+) -> tuple[str, datetime]:
     expira = agora + validade
     cabecalho = _b64(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
-    carga = _b64(json.dumps({"sub": email, "iat": int(agora.timestamp()), "exp": int(expira.timestamp())},
-                            separators=(",", ":")).encode())
+    payload = {
+        "sub": email,
+        "uid": usuario_id or email,
+        "nome": nome,
+        "papel": papel,
+        "cliente_id": cliente_id,
+        "iat": int(agora.timestamp()),
+        "exp": int(expira.timestamp()),
+    }
+    carga = _b64(json.dumps(payload, separators=(",", ":")).encode())
     assinatura = hmac.new(segredo.encode(), f"{cabecalho}.{carga}".encode(), hashlib.sha256).digest()
     return f"{cabecalho}.{carga}.{_b64(assinatura)}", expira
 
 
-def validar_token(token: str, segredo: str, agora: datetime) -> str:
-    """Devolve o e-mail do token ou lança TokenInvalido."""
+def validar_sessao(token: str, segredo: str, agora: datetime) -> SessaoUsuario:
+    """Devolve a sessão do token ou lança TokenInvalido."""
     try:
         cabecalho, carga, assinatura = token.split(".")
         esperada = hmac.new(segredo.encode(), f"{cabecalho}.{carga}".encode(), hashlib.sha256).digest()
@@ -75,7 +102,22 @@ def validar_token(token: str, segredo: str, agora: datetime) -> str:
         raise TokenInvalido("token malformado") from e
     if int(dados.get("exp", 0)) <= int(agora.timestamp()):
         raise TokenInvalido("token expirado")
-    return str(dados["sub"])
+    email = str(dados["sub"])
+    papel = str(dados.get("papel") or "admin")
+    if papel not in ("admin", "cliente"):
+        raise TokenInvalido("papel inválido")
+    return SessaoUsuario(
+        id=str(dados.get("uid") or email),
+        email=email,
+        nome=str(dados.get("nome") or ""),
+        papel=papel,
+        cliente_id=dados.get("cliente_id"),
+    )
+
+
+def validar_token(token: str, segredo: str, agora: datetime) -> str:
+    """Devolve o e-mail do token ou lança TokenInvalido."""
+    return validar_sessao(token, segredo, agora).email
 
 
 @dataclass

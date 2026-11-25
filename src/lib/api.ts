@@ -2,8 +2,26 @@
 // sem ela o front roda no modo demonstração (dados de demo.ts), como antes (decisão D7).
 
 import type { Base } from "./demo";
-import type { Coleira, OcupacaoPiquete, Verificacao } from "./tipos";
-import type { Fazenda, GeoJsonPolygon, Lotacao, Movimentacao, Piquete, PlanoManejo, Rebanho } from "./tipos";
+import type {
+  Cliente,
+  Coleira,
+  CultivarPiqueTech,
+  Fazenda,
+  FazendaPiqueTech,
+  GeoJsonPolygon,
+  Lotacao,
+  Lote,
+  Movimentacao,
+  OcupacaoPiquete,
+  PapelUsuario,
+  Piquete,
+  PlanoManejo,
+  Rebanho,
+  ResultadoExportacao,
+  ResultadoImportacao,
+  Usuario,
+  Verificacao,
+} from "./tipos";
 
 export const API_URL: string = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 export const USAR_API = API_URL !== "";
@@ -19,9 +37,9 @@ export class ErroApi extends Error {
   }
 }
 
-// ---------- sessão (SPEC-009) ----------
-// O token fica no localStorage só por conveniência: se o navegador bloquear, o login vale até recarregar.
+// ---------- sessão (SPEC-009 / SPEC-017) ----------
 const CHAVE_TOKEN = "maneja.token";
+const CHAVE_FAZENDA = "maneja.fazenda_id";
 let tokenEmMemoria: string | null = null;
 
 export function lerToken(): string | null {
@@ -39,6 +57,23 @@ export function guardarToken(token: string | null): void {
     else localStorage.setItem(CHAVE_TOKEN, token);
   } catch {
     // sem armazenamento: fica só em memória
+  }
+}
+
+export function lerFazendaSalva(): string | null {
+  try {
+    return localStorage.getItem(CHAVE_FAZENDA);
+  } catch {
+    return null;
+  }
+}
+
+export function guardarFazendaSalva(id: string | null): void {
+  try {
+    if (id === null) localStorage.removeItem(CHAVE_FAZENDA);
+    else localStorage.setItem(CHAVE_FAZENDA, id);
+  } catch {
+    // ignora
   }
 }
 
@@ -62,6 +97,7 @@ async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Prom
   }
   if (resposta.status === 401 && caminho !== "/auth/token") {
     guardarToken(null);
+    guardarFazendaSalva(null);
     window.dispatchEvent(new Event(EVENTO_SESSAO_EXPIRADA));
   }
   if (resposta.status === 204) return undefined as T;
@@ -78,57 +114,122 @@ async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Prom
 
 export interface BaseApi extends Base {
   plano: PlanoManejo | null;
+  lotes: Lote[];
 }
 
-export async function carregarBase(): Promise<BaseApi> {
-  const [fazenda, piquetes, lotacao, ndvi, clima, historico] = await Promise.all([
-    chamar<Fazenda>("GET", "/fazenda"),
-    chamar<Piquete[]>("GET", "/piquetes"),
-    chamar<Lotacao[]>("GET", "/lotacao"),
-    chamar<Base["ndvi"]>("GET", "/ndvi"),
-    chamar<Base["clima"]>("GET", "/clima"),
-    chamar<Movimentacao[]>("GET", "/historico"),
+function baseFazenda(fazendaId: string): string {
+  return `/fazendas/${encodeURIComponent(fazendaId)}`;
+}
+
+export async function carregarBase(fazendaId: string): Promise<BaseApi> {
+  const b = baseFazenda(fazendaId);
+  const [fazenda, piquetes, lotacao, lotes, ndvi, clima, historico] = await Promise.all([
+    chamar<Fazenda>("GET", b),
+    chamar<Piquete[]>("GET", `${b}/piquetes`),
+    chamar<Lotacao[]>("GET", `${b}/lotacao`),
+    chamar<Lote[]>("GET", `${b}/lotes`),
+    chamar<Base["ndvi"]>("GET", `${b}/ndvi`),
+    chamar<Base["clima"]>("GET", `${b}/clima`),
+    chamar<Movimentacao[]>("GET", `${b}/historico`),
   ]);
-  const plano = await chamar<PlanoManejo>("GET", "/plano").catch((e: unknown) => {
+  const plano = await chamar<PlanoManejo>("GET", `${b}/plano`).catch((e: unknown) => {
     if (e instanceof ErroApi && e.status === 404) return null;
     throw e;
   });
-  return { fazenda, piquetes, lotacao, ndvi, clima, historico, plano };
+  return { fazenda, piquetes, lotacao, lotes, ndvi, clima, historico, plano };
 }
 
 export interface Sessao {
   access_token: string;
   expira_em: string;
+  id: string;
   email: string;
+  nome: string;
+  papel: PapelUsuario;
+  cliente_id: string | null;
 }
 
 export async function entrar(email: string, senha: string): Promise<Sessao> {
   const sessao = await chamar<Sessao>("POST", "/auth/token", { email, senha });
   guardarToken(sessao.access_token);
+  guardarFazendaSalva(null);
   return sessao;
 }
 
 export function sair(): void {
   guardarToken(null);
+  guardarFazendaSalva(null);
 }
 
 export const api = {
-  coleiras: () => chamar<Coleira[]>("GET", "/coleiras"),
-  ocupacao: () => chamar<OcupacaoPiquete[]>("GET", "/ocupacao"),
-  verificacoes: () => chamar<{ verificacoes: Verificacao[]; avisos: string[] }>("GET", "/verificacoes"),
-  avancarCampo: () => chamar("POST", "/simulador/avancar", { horas: 24 }),
-  moverColeiras: (id: string, piqueteId: string) =>
-    chamar("POST", `/simulador/executar/${encodeURIComponent(id)}`, { piquete_id: piqueteId }),
-  gerarPlano: () => chamar<PlanoManejo>("POST", "/plano"),
-  aceitar: (id: string, destinoId?: string) =>
-    chamar<Movimentacao>("POST", `/movimentacoes/${id}/aceitar`, destinoId ? { destino_id: destinoId } : undefined),
-  recusar: (id: string) => chamar<Movimentacao>("POST", `/movimentacoes/${id}/recusar`),
-  salvarFazenda: (nome: string) => chamar<Fazenda>("PUT", "/fazenda", { nome }),
-  criarPiquete: (nome: string, vegetacao: string, geometria: GeoJsonPolygon) =>
-    chamar<Piquete>("POST", "/piquetes", { nome, vegetacao, geometria }),
-  atualizarGeometria: (id: string, geometria: GeoJsonPolygon) => chamar<Piquete>("PUT", `/piquetes/${id}`, { geometria }),
-  removerPiquete: (id: string) => chamar<void>("DELETE", `/piquetes/${id}`),
-  salvarLotacao: (piqueteId: string, r: Rebanho) => chamar<Lotacao>("PUT", `/lotacao/${piqueteId}`, r),
+  saude: () => chamar<{ status: string; modo_seugado: string }>("GET", "/saude"),
+  me: () => chamar<Usuario>("GET", "/me"),
+  fazendas: () => chamar<Fazenda[]>("GET", "/fazendas"),
+
+  // Operações da fazenda ativa
+  coleiras: (fazendaId: string) => chamar<Coleira[]>("GET", `${baseFazenda(fazendaId)}/coleiras`),
+  criarColeiras: (
+    fazendaId: string,
+    dados: { piquete_id?: string | null; lote_id?: string | null; categoria: string; quantidade: number },
+  ) => chamar<Coleira[]>("POST", `${baseFazenda(fazendaId)}/coleiras`, dados),
+  removerColeira: (fazendaId: string, coleiraId: string) =>
+    chamar<void>("DELETE", `${baseFazenda(fazendaId)}/coleiras/${encodeURIComponent(coleiraId)}`),
+  ocupacao: (fazendaId: string) => chamar<OcupacaoPiquete[]>("GET", `${baseFazenda(fazendaId)}/ocupacao`),
+  verificacoes: (fazendaId: string) =>
+    chamar<{ verificacoes: Verificacao[]; avisos: string[] }>("GET", `${baseFazenda(fazendaId)}/verificacoes`),
+  avancarCampo: (fazendaId: string) => chamar("POST", `${baseFazenda(fazendaId)}/simulador/avancar`, { horas: 24 }),
+  moverColeiras: (fazendaId: string, id: string, piqueteId: string) =>
+    chamar("POST", `${baseFazenda(fazendaId)}/simulador/executar/${encodeURIComponent(id)}`, { piquete_id: piqueteId }),
+  gerarPlano: (fazendaId: string) => chamar<PlanoManejo>("POST", `${baseFazenda(fazendaId)}/plano`),
+  aceitar: (fazendaId: string, id: string, destinoId?: string) =>
+    chamar<Movimentacao>(
+      "POST",
+      `${baseFazenda(fazendaId)}/movimentacoes/${encodeURIComponent(id)}/aceitar`,
+      destinoId ? { destino_id: destinoId } : undefined,
+    ),
+  recusar: (fazendaId: string, id: string) =>
+    chamar<Movimentacao>("POST", `${baseFazenda(fazendaId)}/movimentacoes/${encodeURIComponent(id)}/recusar`),
+  salvarFazenda: (fazendaId: string, nome: string) => chamar<Fazenda>("PUT", baseFazenda(fazendaId), { nome }),
+  criarPiquete: (fazendaId: string, nome: string, vegetacao: string, geometria: GeoJsonPolygon) =>
+    chamar<Piquete>("POST", `${baseFazenda(fazendaId)}/piquetes`, { nome, vegetacao, geometria }),
+  atualizarGeometria: (fazendaId: string, id: string, geometria: GeoJsonPolygon) =>
+    chamar<Piquete>("PUT", `${baseFazenda(fazendaId)}/piquetes/${encodeURIComponent(id)}`, { geometria }),
+  removerPiquete: (fazendaId: string, id: string) =>
+    chamar<void>("DELETE", `${baseFazenda(fazendaId)}/piquetes/${encodeURIComponent(id)}`),
+  salvarLotacao: (fazendaId: string, piqueteId: string, r: Rebanho) =>
+    chamar<Lotacao>("PUT", `${baseFazenda(fazendaId)}/lotacao/${encodeURIComponent(piqueteId)}`, r),
+
+  // Administração (SPEC-017)
+  clientes: () => chamar<Cliente[]>("GET", "/clientes"),
+  criarCliente: (dados: { nome: string; contato: string }) => chamar<Cliente>("POST", "/clientes", dados),
+  atualizarCliente: (id: string, dados: { nome?: string; contato?: string }) =>
+    chamar<Cliente>("PUT", `/clientes/${encodeURIComponent(id)}`, dados),
+  criarFazenda: (dados: { nome: string; cliente_id: string | null; timezone: string }) =>
+    chamar<Fazenda>("POST", "/fazendas", dados),
+  atualizarFazendaAdmin: (id: string, dados: { nome: string; cliente_id?: string | null; timezone?: string }) =>
+    chamar<Fazenda>("PUT", baseFazenda(id), dados),
+  usuarios: () => chamar<Usuario[]>("GET", "/usuarios"),
+  criarUsuario: (dados: {
+    email: string;
+    senha: string;
+    papel: PapelUsuario;
+    cliente_id: string | null;
+    nome: string;
+  }) => chamar<Usuario>("POST", "/usuarios", dados),
+  atualizarUsuario: (
+    id: string,
+    dados: { nome?: string; email?: string; senha?: string; papel?: PapelUsuario; cliente_id?: string | null },
+  ) => chamar<Usuario>("PUT", `/usuarios/${encodeURIComponent(id)}`, dados),
+
+  // Integração PiqueTech (SPEC-018)
+  piquetechFazendas: () => chamar<FazendaPiqueTech[]>("GET", "/integracao/piquetech/fazendas"),
+  piquetechCultivares: () => chamar<CultivarPiqueTech[]>("GET", "/integracao/piquetech/cultivares"),
+  piquetechImportar: (seugadoId: string) =>
+    chamar<ResultadoImportacao>("POST", `/integracao/piquetech/importar/${encodeURIComponent(seugadoId)}`),
+  piquetechAtualizar: (fazendaId: string) =>
+    chamar<ResultadoImportacao>("POST", `${baseFazenda(fazendaId)}/integracao/piquetech/atualizar`),
+  piquetechExportar: (fazendaId: string, dados: { cultivar_id?: string | null; metodo_pastejo?: string }) =>
+    chamar<ResultadoExportacao>("POST", `${baseFazenda(fazendaId)}/integracao/piquetech/exportar`, dados),
 };
 
 export function mensagemDeErro(e: unknown): string {

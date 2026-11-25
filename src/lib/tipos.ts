@@ -1,10 +1,28 @@
 export type Confianca = "alta" | "media" | "baixa";
 export type SituacaoPiquete = "ocupado" | "descansando";
+export type PapelUsuario = "admin" | "cliente";
+
+export interface Cliente {
+  id: string;
+  nome: string;
+  contato: string;
+  seugado_id?: string | null;
+}
+
+export interface Usuario {
+  id: string;
+  email: string;
+  nome: string;
+  papel: PapelUsuario;
+  cliente_id: string | null;
+}
 
 export interface Fazenda {
   id: string;
   nome: string;
   timezone: string;
+  cliente_id?: string | null;
+  seugado_id?: string | null;
 }
 
 export interface GeoJsonPolygon {
@@ -20,12 +38,22 @@ export interface Piquete {
   area_ha: number;
   vegetacao: string; // espécie ou tipo de capim
   externo_id?: string | null; // id do mesmo piquete no SeuGado (vem da API)
+  ativo?: boolean;
 }
 
 export interface Rebanho {
   bois: number;
   vacas: number;
   bezerros: number;
+}
+
+export interface Lote extends Rebanho {
+  id: string;
+  fazenda_id: string;
+  nome: string;
+  piquete_atual_id: string | null;
+  desde: string | null;
+  seugado_id?: string | null;
 }
 
 export interface Lotacao extends Rebanho {
@@ -58,6 +86,7 @@ export interface Coleira {
   id: string;
   categoria: string;
   piquete_cadastro_id: string;
+  lote_id?: string | null;
   piquete_observado_id: string | null;
   ultima_posicao: { lat: number; lon: number; instante: string } | null;
 }
@@ -74,11 +103,13 @@ export interface OcupacaoPiquete {
 export interface Verificacao {
   movimentacao_id: string;
   origem_plano: "maneja" | "seugado";
+  externo_id?: string | null;
   data: string;
   piquete_origem_id: string | null;
   piquete_destino_id: string | null;
   status: "cumprida" | "pendente" | "divergente" | "sem_dados" | "sem_vinculo";
   fracao_no_destino: number | null;
+  coleiras_consideradas?: number;
 }
 
 export type StatusMovimentacao = "pendente" | "aceita" | "recusada" | "trocada";
@@ -143,4 +174,38 @@ export interface PlanoManejo {
   horizonte_dias: number;
   movimentacoes: Movimentacao[];
   alertas: Alerta[];
+}
+
+export interface FazendaPiqueTech {
+  seugado_id: string;
+  nome: string;
+  cliente_seugado_id: string | null;
+  cliente_nome: string | null;
+  timezone: string;
+  ja_importada: boolean;
+  fazenda_local_id: string | null;
+}
+
+export interface CultivarPiqueTech {
+  id: string;
+  slug: string;
+  nome: string;
+  regimes_disponiveis: string[];
+  calibrada: boolean;
+  faltantes_calibracao: string[];
+}
+
+export interface ResultadoImportacao {
+  cliente: Cliente;
+  fazenda: Fazenda;
+  piquetes_importados: number;
+  piquetes_inativados: number;
+  lotes_importados: number;
+}
+
+export interface ResultadoExportacao {
+  cliente: Cliente;
+  fazenda: Fazenda;
+  piquetes_exportados: number;
+  lotes_exportados: number;
 }

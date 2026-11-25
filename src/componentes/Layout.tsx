@@ -14,8 +14,10 @@ const LINKS: { para: string; texto: string; icone: NomeIcone }[] = [
 ];
 
 export default function Layout() {
-  const { usuario, fazenda, sair } = useFazenda();
+  const { modo, usuario, fazenda, fazendas, selecionarFazenda, sair } = useFazenda();
   const localizacao = useLocation();
+  const ehAdmin = modo === "api" && usuario.papel === "admin";
+  const emAdmin = localizacao.pathname === "/admin";
 
   return (
     <div className="layout">
@@ -41,11 +43,34 @@ export default function Layout() {
           })}
         </nav>
         <div className="barra-usuario">
-          <span className="barra-avatar" aria-hidden="true">
-            {usuario.nome.charAt(0).toUpperCase()}
+          {fazendas.length > 1 ? (
+            <select
+              className="barra-seletor-fazenda"
+              aria-label="Selecionar fazenda"
+              value={fazenda.id}
+              onChange={(e) => selecionarFazenda(e.target.value)}
+            >
+              {fazendas.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.nome}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {ehAdmin ? (
+            <Link
+              to="/admin"
+              className={emAdmin ? "barra-admin ativo" : "barra-admin"}
+              aria-current={emAdmin ? "page" : undefined}
+            >
+              Admin
+            </Link>
+          ) : null}
+          <span className="barra-avatar" aria-hidden="true" title={usuario.email}>
+            {(usuario.nome || usuario.email).charAt(0).toUpperCase()}
           </span>
           <span className="barra-usuario-texto">
-            <span className="barra-usuario-nome">{usuario.nome}</span>
+            <span className="barra-usuario-nome">{usuario.nome || usuario.email}</span>
             <span className="barra-usuario-fazenda">{fazenda.nome}</span>
           </span>
           {sair ? (

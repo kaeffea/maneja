@@ -1,8 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import Layout from "./componentes/Layout";
 import { FazendaProvider } from "./lib/fazenda";
-import Configuracoes from "./paginas/Configuracoes";
+import Admin from "./paginas/Admin";
 import Campo from "./paginas/Campo";
+import Configuracoes from "./paginas/Configuracoes";
 import Dashboard from "./paginas/Dashboard";
 import Historico from "./paginas/Historico";
 import Mapa from "./paginas/Mapa";
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/historico" element={<Historico />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/fazenda" element={<Configuracoes />} />
+            <Route path="/admin" element={<Admin />} />
           </Route>
           <Route path="*" element={<Navigate to="/mapa" replace />} />
         </Routes>

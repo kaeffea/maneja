@@ -6,10 +6,11 @@ As datas são relativas a "hoje", para a demonstração funcionar em qualquer di
 from __future__ import annotations
 
 from .datas import somar_dias
-from .dominio import Coleira, Fazenda, LeituraNdvi, Lotacao, Movimentacao, Piquete, Rebanho
+from .dominio import Cliente, Coleira, Fazenda, LeituraNdvi, Lotacao, Movimentacao, Piquete, Rebanho
 from .geo import area_ha, poligono_em_metros
 from .repositorio import RepositorioMemoria
 
+CLIENTE_ID = "cli-marcinho"
 FAZENDA_ID = "faz-marcinho"
 ORIGEM = (-9.6205, -35.9695)
 
@@ -53,11 +54,13 @@ def coleiras_demo() -> list[Coleira]:
         for categoria, qtd in grupos:
             for _ in range(qtd):
                 n += 1
-                coleiras.append(Coleira(f"col-{n:02d}", categoria, piquete_id))
+                coleiras.append(Coleira(f"col-{n:02d}", categoria, piquete_id, fazenda_id=FAZENDA_ID))
     return coleiras
 
 
 def repositorio_demo(hoje: str) -> RepositorioMemoria:
+    cliente_demo = Cliente(CLIENTE_ID, "Marcinho", "")
+    fazenda_demo = Fazenda(FAZENDA_ID, "Fazenda do Marcinho", "America/Maceio", cliente_id=CLIENTE_ID)
     piquetes = piquetes_demo()
     nome = {p.id: p.nome for p in piquetes}
     ndvi = [
@@ -80,6 +83,7 @@ def repositorio_demo(hoje: str) -> RepositorioMemoria:
             ndvi_origem=ndvi_origem, ndvi_destino=ndvi_destino, motivo=motivo, confianca="alta",
             motivo_confianca="última leitura de NDVI há 2 dias no destino", status=status,
             destino_trocado=status == "trocada", destino_recomendado_nome=nome[recomendado], explicacao=motivo,
+            fazenda_id=FAZENDA_ID,
         )
 
     vacas = Rebanho(0, 18, 10)
@@ -92,6 +96,12 @@ def repositorio_demo(hoje: str) -> RepositorioMemoria:
                 "Piquete Macarrão estava com NDVI 0,33, abaixo de 0,35. Piquete Abóbora era o livre apto com NDVI mais alto."),
     ]
     return RepositorioMemoria(
-        fazenda=Fazenda(FAZENDA_ID, "Fazenda do Marcinho", "America/Maceio"),
-        piquetes=piquetes, lotacao=lotacao, ndvi=ndvi, historico=historico, coleiras=coleiras_demo(),
+        fazenda=fazenda_demo,
+        clientes=[cliente_demo],
+        fazendas=[fazenda_demo],
+        piquetes=piquetes,
+        lotacao=lotacao,
+        ndvi=ndvi,
+        historico=historico,
+        coleiras=coleiras_demo(),
     )

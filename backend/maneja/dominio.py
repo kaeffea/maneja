@@ -13,6 +13,7 @@ TipoAlerta = Literal["sem_piquete_apto", "passando_do_ponto", "pronto_para_paste
 OrigemPlano = Literal["maneja", "seugado"]
 StatusVerificacao = Literal["cumprida", "pendente", "divergente", "sem_dados", "sem_vinculo"]
 SituacaoOcupacao = Literal["confere", "diverge", "sem_coleiras"]
+PapelUsuario = Literal["admin", "cliente"]
 
 CATEGORIAS = ("bois", "vacas", "bezerros")
 
@@ -34,10 +35,30 @@ class CotaEsgotada(Exception):
 
 
 @dataclass
+class Cliente:
+    id: str
+    nome: str
+    contato: str = ""
+    seugado_id: str | None = None
+
+
+@dataclass
+class Usuario:
+    id: str
+    email: str
+    senha_hash: str
+    papel: PapelUsuario
+    cliente_id: str | None = None
+    nome: str = ""
+
+
+@dataclass
 class Fazenda:
     id: str
     nome: str
-    timezone: str
+    timezone: str = "America/Maceio"
+    cliente_id: str | None = None
+    seugado_id: str | None = None
 
 
 @dataclass
@@ -49,6 +70,7 @@ class Piquete:
     area_ha: float
     vegetacao: str
     externo_id: str | None = None  # id do mesmo piquete no SeuGado
+    ativo: bool = True
 
 
 @dataclass
@@ -60,6 +82,23 @@ class Rebanho:
     @property
     def total(self) -> int:
         return self.bois + self.vacas + self.bezerros
+
+
+@dataclass
+class Lote:
+    id: str
+    fazenda_id: str
+    nome: str
+    piquete_atual_id: str | None = None
+    bois: int = 0
+    vacas: int = 0
+    bezerros: int = 0
+    desde: str | None = None
+    seugado_id: str | None = None
+
+    @property
+    def rebanho(self) -> Rebanho:
+        return Rebanho(self.bois, self.vacas, self.bezerros)
 
 
 @dataclass
@@ -121,6 +160,7 @@ class Movimentacao:
     coleiras: list[str] = field(default_factory=list)
     origem_plano: OrigemPlano = "maneja"
     externo_id: str | None = None
+    fazenda_id: str = ""
 
 
 @dataclass
@@ -162,6 +202,8 @@ class Coleira:
     id: str
     categoria: str  # boi, vaca ou bezerro
     piquete_cadastro_id: str  # onde o cadastro diz que o animal está
+    fazenda_id: str = ""
+    lote_id: str | None = None
 
 
 @dataclass

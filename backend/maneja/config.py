@@ -59,8 +59,7 @@ class Config:
     seugado_arquivo: str = str(EXEMPLO_PLANO_SEUGADO)
     seugado_url: str = ""
     seugado_email: str = ""
-    seugado_senha: str = ""
-    seugado_fazenda_id: str = ""
+    seugado_senha: str = field(default="", repr=False)
     perda_sinal: float = PERDA_SINAL_PADRAO
     semente: int | None = None
     database_url: str = ""  # vazio = memória (SPEC-008)
@@ -110,10 +109,9 @@ class Config:
             cdse_client_secret=e.get("MANEJA_CDSE_CLIENT_SECRET", ""),
             seugado_modo=e.get("MANEJA_SEUGADO_MODO", "desligado"),
             seugado_arquivo=e.get("MANEJA_SEUGADO_ARQUIVO", str(EXEMPLO_PLANO_SEUGADO)),
-            seugado_url=e.get("MANEJA_SEUGADO_URL", ""),
-            seugado_email=e.get("MANEJA_SEUGADO_EMAIL", ""),
+            seugado_url=e.get("MANEJA_SEUGADO_URL", "").strip(),
+            seugado_email=e.get("MANEJA_SEUGADO_EMAIL", "").strip(),
             seugado_senha=e.get("MANEJA_SEUGADO_SENHA", ""),
-            seugado_fazenda_id=e.get("MANEJA_SEUGADO_FAZENDA_ID", ""),
             perda_sinal=float(e.get("MANEJA_PERDA_SINAL", PERDA_SINAL_PADRAO)),
             semente=int(semente) if semente else None,
             database_url=e.get("DATABASE_URL", ""),
@@ -128,7 +126,7 @@ def adaptador_seugado(config: Config) -> ISeuGado:
     if config.seugado_modo == "arquivo":
         return SeuGadoArquivo(config.seugado_arquivo)
     if config.seugado_modo == "api":
-        return SeuGadoApi(config.seugado_url, config.seugado_email, config.seugado_senha, config.seugado_fazenda_id)
+        return SeuGadoApi(config.seugado_url, config.seugado_email, config.seugado_senha)
     return SeuGadoDesligado()
 
 
@@ -152,5 +150,6 @@ def montar_sistema(config: Config | None = None, inicio: datetime | None = None,
     sistema = Sistema(repo, clima if clima is not None else config.clima, simulador, relogio,
                       llm if llm is not None else config.llm, config.seugado, config.satelite)
     sistema.atualizar_coleiras()
-    sistema.verificacoes()  # com a integração ligada, registra quem está na origem de cada movimentação do SeuGado
+    if sistema.seugado.modo == "arquivo":
+        sistema.verificacoes()  # em modo arquivo local, registra quem está na origem de cada movimentação
     return sistema
