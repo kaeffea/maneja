@@ -4,18 +4,19 @@
   height: calc(100vh - var(--altura-topo));
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .mapa-container {
     flex-direction: row;
   }
 }
 
 .mapa-wrapper {
+  position: relative;
   flex: 1;
-  height: 60vh;
+  height: 58vh;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .mapa-wrapper {
     flex: 0 0 70%;
     height: 100%;
@@ -31,20 +32,274 @@
   overflow-y: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .painel-lateral {
     flex: 0 0 30%;
+    min-width: 310px;
     border-left: 1px solid var(--cor-borda);
     border-top: none;
   }
 }
 
+.painel-coleiras-toggle {
+  margin-bottom: 14px;
+}
+
+.painel-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.painel-lateral h2 {
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.dica-desenho {
+  margin: 0 0 12px;
+  font-size: 0.84rem;
+}
+
+/* ---------- controles personalizados do Leaflet e Geoman ---------- */
+
+.mapa-wrapper .leaflet-bar {
+  border: 1px solid var(--cor-borda) !important;
+  border-radius: var(--raio) !important;
+  box-shadow: 0 4px 14px rgba(23, 63, 80, 0.14) !important;
+  overflow: hidden;
+  background: var(--cor-superficie);
+}
+
+.mapa-wrapper .leaflet-bar a,
+.mapa-wrapper .leaflet-pm-toolbar .leaflet-buttons-control-button {
+  width: 38px !important;
+  height: 38px !important;
+  line-height: 36px !important;
+  background-color: var(--cor-superficie) !important;
+  color: var(--cor-primaria) !important;
+  border-bottom: 1px solid var(--cor-borda) !important;
+  font-family: var(--fonte);
+  font-weight: 700;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mapa-wrapper .leaflet-bar a:last-child,
+.mapa-wrapper .leaflet-pm-toolbar .leaflet-buttons-control-button:last-child {
+  border-bottom: none !important;
+}
+
+.mapa-wrapper .leaflet-bar a:hover,
+.mapa-wrapper .leaflet-pm-toolbar .leaflet-buttons-control-button:hover {
+  background-color: var(--cor-primaria-suave) !important;
+  color: var(--cor-primaria-escura) !important;
+}
+
+.mapa-wrapper .leaflet-pm-toolbar .active .leaflet-buttons-control-button {
+  background-color: var(--cor-primaria) !important;
+  color: var(--cor-superficie) !important;
+}
+
+.mapa-wrapper .leaflet-pm-actions-container .leaflet-pm-action {
+  background-color: var(--cor-cartao-escuro) !important;
+  color: var(--cor-superficie) !important;
+  font-family: var(--fonte);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0 10px;
+}
+
+/* ---------- barra flutuante de coordenadas e GPS ---------- */
+
+.controles-topo {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 66px);
+}
+
+.controles-busca {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  box-shadow: 0 4px 14px rgba(23, 63, 80, 0.14);
+}
+
+.controles-busca-icone {
+  display: inline-flex;
+  color: var(--cor-texto-suave);
+}
+
+.controles-busca-icone .icone {
+  width: 15px;
+  height: 15px;
+}
+
+.controles-busca input {
+  width: 142px;
+  padding: 5px 4px;
+  border: none;
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.controles-busca input:focus {
+  outline: none;
+}
+
+.controle-btn-primario {
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--raio-pequeno);
+  background: var(--cor-primaria);
+  color: var(--cor-superficie);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.controle-btn-primario:hover {
+  background: var(--cor-primaria-escura);
+}
+
+.controle-btn-gps {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--cor-primaria);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(23, 63, 80, 0.14);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.controle-btn-gps .icone {
+  width: 16px;
+  height: 16px;
+}
+
+.controle-btn-gps:hover {
+  border-color: var(--cor-primaria);
+  background: var(--cor-primaria);
+  color: var(--cor-superficie);
+}
+
+/* ---------- lista e cartões de piquetes ---------- */
+
+.texto-suave {
+  font-size: 0.88rem;
+  color: var(--cor-texto-suave);
+}
+
+.confirmar-desativacao {
+  font-size: 0.82rem;
+  color: var(--cor-erro);
+  font-weight: 700;
+  align-self: center;
+}
+
+.acoes-formulario {
+  display: flex;
+  gap: 8px;
+}
+
+.botao-compacto {
+  min-height: 34px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+}
+
+.lista-piquetes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.item-piquete {
+  border: 1px solid var(--cor-borda);
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.item-piquete:hover {
+  border-color: var(--cor-primaria);
+}
+
+.item-piquete.ativo {
+  border-color: var(--cor-primaria);
+  background: var(--cor-superficie-2);
+  box-shadow: 0 0 0 2px var(--cor-primaria-suave);
+}
+
+.item-piquete-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.item-piquete h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.item-piquete p {
+  margin: 2px 0;
+  font-size: 0.83rem;
+  color: var(--cor-texto-suave);
+}
+
+.acoes-piquete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+/* ---------- tooltips e legenda ---------- */
+
 .tooltip-piquete {
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-pequeno);
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(23, 63, 80, 0.14);
   color: var(--cor-texto);
+  font-family: var(--fonte);
   font-weight: 700;
   pointer-events: auto !important;
   text-align: center;
@@ -52,7 +307,7 @@
 
 .tooltip-detalhes {
   display: none;
-  font-weight: normal;
+  font-weight: 500;
   font-size: 0.85em;
   text-align: left;
   margin-top: 4px;
@@ -64,167 +319,30 @@
   display: block;
 }
 
-.formulario-piquete {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.formulario-piquete label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.9em;
-  font-weight: 500;
-}
-
-.formulario-piquete input,
-.formulario-piquete select {
-  padding: 8px 10px;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-pequeno);
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-  margin-top: 4px;
-  font-family: inherit;
-  font-size: 0.95rem;
-}
-
-.botao-acao {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  background: var(--cor-primaria);
-  color: var(--cor-superficie);
-  border: 1px solid transparent;
-  padding: 8px 14px;
-  border-radius: var(--raio-pequeno);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.botao-acao:hover {
-  background: var(--cor-primaria-escura);
-}
-
-.botao-acao.secundario {
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-  border-color: var(--cor-borda);
-}
-
-.botao-acao.secundario:hover {
-  background: var(--cor-superficie);
-  border-color: var(--cor-primaria);
-  color: var(--cor-primaria);
-}
-
-.botao-acao.perigo {
-  background: var(--cor-erro);
-  color: var(--cor-superficie);
-}
-
-.botao-acao.perigo:hover {
-  background: var(--cor-erro);
-  filter: brightness(0.9);
-}
-
-.mensagem-erro {
-  background: var(--cor-erro-suave);
-  color: var(--cor-erro);
-  padding: 12px;
-  border-radius: var(--raio-pequeno);
-  margin-bottom: 16px;
-  font-size: 0.9em;
-}
-
-.texto-suave {
-  font-size: 0.9em;
-  color: var(--cor-texto-suave);
-}
-
-.confirmar-desativacao {
-  font-size: 0.85em;
-  color: var(--cor-erro);
-  font-weight: bold;
-}
-
-.acoes-formulario {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.lista-piquetes {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.item-piquete {
-  border: 1px solid var(--cor-borda);
-  padding: 12px;
-  border-radius: var(--raio);
-  background: var(--cor-superficie);
-  cursor: pointer;
-}
-
-.item-piquete:hover {
-  border-color: var(--cor-primaria);
-}
-
-.item-piquete.ativo {
-  border-color: var(--cor-primaria);
-  background: var(--cor-superficie-2);
-}
-
-.item-piquete h3 {
-  margin: 0 0 4px 0;
-  font-size: 1.1em;
-}
-
-.item-piquete p {
-  margin: 2px 0;
-  font-size: 0.85em;
-  color: var(--cor-texto-suave);
-}
-
-.acoes-piquete {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
 .legenda-mapa {
-  background: var(--cor-superficie);
-  padding: 8px;
-  border-radius: var(--raio-pequeno);
-  font-size: 0.8em;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 10px 12px;
+  border-radius: var(--raio);
+  font-size: 0.78rem;
   position: absolute;
   bottom: 20px;
-  right: 20px;
+  right: 16px;
   z-index: 1000;
   border: 1px solid var(--cor-borda);
+  box-shadow: 0 4px 14px rgba(23, 63, 80, 0.12);
 }
 
 .legenda-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
 }
 
 .legenda-cor {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border: 1px solid var(--cor-borda);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .legenda-cor.sem-leitura {
@@ -232,77 +350,60 @@
 }
 
 .legenda-titulo {
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-weight: 700;
+  margin-bottom: 5px;
 }
 
 .legenda-gradiente {
-  width: 180px;
-  height: 12px;
-  border-radius: 2px;
+  width: 176px;
+  height: 10px;
+  border-radius: 999px;
   background: linear-gradient(to right, var(--cor-ndvi-baixo), var(--cor-ndvi-medio), var(--cor-ndvi-alto));
 }
 
 .legenda-escala {
   display: flex;
   justify-content: space-between;
-  margin: 2px 0 6px;
+  margin: 4px 0 6px;
+  color: var(--cor-texto-suave);
 }
 
-.controles-topo {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-  max-width: calc(100% - 56px);
+.mapa-cinza {
+  filter: grayscale(1);
 }
 
-.controles-topo input {
-  padding: 6px 8px;
-  border: 1px solid var(--cor-borda);
+.tooltip-movimento {
+  background: var(--cor-cartao-escuro);
+  color: var(--cor-superficie);
+  border: none;
   border-radius: var(--raio-pequeno);
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-  width: 150px;
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-
-.controles-topo button {
-  padding: 6px 10px;
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-pequeno);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
+  font-family: var(--fonte);
   font-weight: 600;
 }
 
-.controles-topo button:hover {
-  border-color: var(--cor-primaria);
-  color: var(--cor-primaria);
+.tooltip-movimento::before {
+  display: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 899px) {
   .mapa-wrapper {
-    flex: 0 0 55%;
+    flex: 0 0 54%;
     height: auto;
   }
 
-  .controles-topo input {
-    width: 112px;
-    font-size: 0.8rem;
+  .controles-busca input {
+    width: 108px;
+    font-size: 0.78rem;
   }
 
-  .controles-topo button {
-    padding: 5px 8px;
-    font-size: 0.8rem;
+  .controle-btn-gps {
+    height: 38px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+  }
+
+  .controle-btn-gps span {
+    display: none;
   }
 
   .legenda-mapa {
@@ -311,15 +412,3 @@
     max-width: calc(100% - 20px);
   }
 }
-.mapa-cinza { filter: grayscale(1); }
-.mapa-wrapper { position: relative; }
-.painel-lateral h2 { margin-bottom: 8px; }
-.dica-desenho { margin: 0 0 12px; }
-.tooltip-movimento {
-  background: var(--cor-texto);
-  color: var(--cor-superficie);
-  border: none;
-  border-radius: var(--raio-pequeno);
-  font-weight: 600;
-}
-.tooltip-movimento::before { display: none; }

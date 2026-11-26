@@ -8,34 +8,53 @@
   position: sticky;
   top: 0;
   z-index: 1100;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
   height: var(--altura-barra);
-  padding: 0 24px;
+  padding: 0 18px;
   background: var(--cor-superficie);
   border-bottom: 1px solid var(--cor-borda);
 }
 
-.barra-marca {
-  justify-self: start;
-  display: inline-flex;
+.barra-esquerda {
+  display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.barra-marca {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--cor-primaria);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   text-decoration: none;
   white-space: nowrap;
 }
 
+.barra-divisor {
+  flex: none;
+  width: 1px;
+  height: 22px;
+  background: var(--cor-borda);
+}
+
 .barra-links {
-  justify-self: center;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: stretch;
-  gap: 4px;
+  justify-content: center;
+  gap: 2px;
   height: 100%;
 }
 
@@ -43,10 +62,10 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 12px;
+  gap: 6px;
+  padding: 0 10px;
   color: var(--cor-texto-suave);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -65,8 +84,8 @@
 .barra-link.ativo::after {
   content: "";
   position: absolute;
-  left: 8px;
-  right: 8px;
+  left: 6px;
+  right: 6px;
   bottom: 0;
   height: 3px;
   background: var(--cor-destaque);
@@ -75,17 +94,45 @@
 
 .barra-link .icone {
   flex: none;
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
 }
 
 .barra-usuario {
-  justify-self: end;
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  max-width: 100%;
+  gap: 8px;
+}
+
+.barra-admin {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--cor-primaria);
+  border-radius: var(--raio-pequeno);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.barra-admin .icone {
+  width: 15px;
+  height: 15px;
+}
+
+.barra-admin:hover,
+.barra-admin.ativo {
+  background: var(--cor-primaria);
+  color: var(--cor-superficie);
 }
 
 .barra-avatar {
@@ -102,39 +149,14 @@
   font-weight: 700;
 }
 
-.barra-usuario-texto {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  line-height: 1.25;
-}
-
-.barra-usuario-nome,
-.barra-usuario-fazenda {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.barra-usuario-nome {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--cor-texto);
-}
-
-.barra-usuario-fazenda {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--cor-texto-suave);
-}
-
 .barra-sair {
   flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
-  padding: 4px 12px;
+  gap: 6px;
+  height: 34px;
+  padding: 0 11px;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-pequeno);
   background: var(--cor-superficie);
@@ -142,61 +164,20 @@
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.barra-sair .icone {
+  width: 15px;
+  height: 15px;
 }
 
 .barra-sair:hover {
   border-color: var(--cor-primaria);
   color: var(--cor-primaria);
-}
-
-.barra-seletor-fazenda {
-  width: auto;
-  max-width: 155px;
-  height: 32px;
-  padding: 0 8px;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-pequeno);
   background: var(--cor-superficie-2);
-  color: var(--cor-texto);
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 30px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.barra-seletor-fazenda:focus {
-  outline: 2px solid var(--cor-primaria-suave);
-  border-color: var(--cor-primaria);
-}
-
-.barra-admin {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 4px 10px;
-  border: 1px solid var(--cor-primaria);
-  border-radius: var(--raio-pequeno);
-  background: var(--cor-primaria-suave);
-  color: var(--cor-primaria);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.barra-admin:hover,
-.barra-admin.ativo {
-  background: var(--cor-primaria);
-  color: var(--cor-superficie);
 }
 
 .conteudo {
@@ -213,56 +194,32 @@
   padding: 0;
 }
 
-@media (max-width: 1200px) {
+/* Telas desktop menores (1024px–1260px): esconde ícones da nav e compacta folgas */
+@media (max-width: 1260px) {
   .barra {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
     padding: 0 14px;
-  }
-
-  .barra-usuario-texto {
-    display: none;
-  }
-
-  .barra-seletor-fazenda {
-    max-width: 130px;
+    gap: 8px;
   }
 
   .barra-link {
-    padding: 0 7px;
-    gap: 4px;
-    font-size: 0.82rem;
-  }
-}
-
-@media (max-width: 1024px) {
-  .barra {
-    gap: 6px;
-    padding: 0 10px;
-  }
-
-  .barra-avatar {
-    display: none;
-  }
-
-  .barra-seletor-fazenda {
-    max-width: 115px;
-  }
-
-  .barra-link {
-    padding: 0 5px;
-    font-size: 0.78rem;
+    padding: 0 8px;
+    font-size: 0.83rem;
   }
 
   .barra-link .icone {
     display: none;
   }
+
+  .barra-avatar {
+    display: none;
+  }
 }
 
-@media (max-width: 768px) {
+/* Telas tablet / mobile (<= 899px): navegação principal vai para a barra inferior */
+@media (max-width: 899px) {
   .barra {
     padding: 0 12px;
+    gap: 8px;
   }
 
   .barra-links {
@@ -272,13 +229,12 @@
     right: 0;
     z-index: 1100;
     width: 100%;
-    justify-self: stretch;
     height: var(--altura-barra-inferior);
     display: flex;
     align-items: stretch;
     justify-content: space-around;
     gap: 0;
-    padding: 0 2px;
+    padding: 0 4px;
     background: var(--cor-superficie);
     border-top: 1px solid var(--cor-borda);
   }
@@ -309,35 +265,11 @@
   }
 
   .barra-link.ativo::after {
-    left: 6px;
-    right: 6px;
+    left: 8px;
+    right: 8px;
     top: 0;
     bottom: auto;
     border-radius: 0 0 3px 3px;
-  }
-
-  .barra-usuario-texto {
-    display: none;
-  }
-
-  .barra-avatar {
-    display: none;
-  }
-
-  .barra-seletor-fazenda {
-    max-width: 105px;
-    font-size: 0.72rem;
-    padding: 0 6px;
-  }
-
-  .barra-admin,
-  .barra-sair {
-    padding: 4px 8px;
-    font-size: 0.74rem;
-  }
-
-  .barra-usuario {
-    gap: 6px;
   }
 
   .conteudo {
@@ -346,5 +278,38 @@
 
   .conteudo-cheio {
     padding: 0;
+  }
+}
+
+/* Celular estreito (<= 480px): mantém marca enxuta e botões sempre dentro da tela */
+@media (max-width: 480px) {
+  .barra {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .barra-esquerda {
+    gap: 6px;
+  }
+
+  .barra-marca-texto,
+  .barra-divisor {
+    display: none;
+  }
+
+  .barra-usuario {
+    gap: 6px;
+  }
+
+  .barra-admin,
+  .barra-sair {
+    padding: 0 9px;
+    font-size: 0.76rem;
+    gap: 4px;
+  }
+
+  .barra-admin .icone,
+  .barra-sair .icone {
+    display: none;
   }
 }

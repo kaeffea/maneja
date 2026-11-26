@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "@geoman-io/leaflet-geoman-free";
+import { Icone } from "../componentes/ui/Icones";
+import Interruptor from "../componentes/ui/Interruptor";
 import { dataComDia, dataCurta, decimal } from "../lib/datas";
 import { useFazenda } from "../lib/fazenda";
 import { api, mensagemDeErro } from "../lib/api";
@@ -97,11 +99,27 @@ function BuscaCoordenadas() {
   };
 
   return (
-    <div className="controles-topo">
-      <input type="text" placeholder="-9.62, -35.97" value={texto} aria-label="Coordenadas"
-        onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && irPara()} />
-      <button type="button" onClick={irPara}>Ir</button>
-      <button type="button" onClick={minhaLocalizacao}>Minha localização</button>
+    <div className="controles-topo" role="search" aria-label="Buscar coordenadas no mapa">
+      <div className="controles-busca">
+        <span className="controles-busca-icone" aria-hidden="true">
+          <Icone nome="busca" />
+        </span>
+        <input
+          type="text"
+          placeholder="-9.62, -35.97"
+          value={texto}
+          aria-label="Coordenadas"
+          onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && irPara()}
+        />
+        <button type="button" className="controle-btn-primario" onClick={irPara}>
+          Ir
+        </button>
+      </div>
+      <button type="button" className="controle-btn-gps" onClick={minhaLocalizacao} title="Centralizar na minha localização">
+        <Icone nome="gps" />
+        <span>Minha localização</span>
+      </button>
     </div>
   );
 }
@@ -123,6 +141,7 @@ export default function Mapa() {
     );
     return () => { ativo = false; };
   }, [mostrarColeiras, modo, fazenda.id]);
+
   const piquetes = estado.piquetes;
   const resumos = resumoPiquetes(piquetes, estado.ndvi, estado.lotacao, hoje);
   const plano = estado.plano;
@@ -256,6 +275,7 @@ export default function Mapa() {
               </Polyline>
             );
           })}
+
           {mostrarColeiras && coleiras.map((coleira) => {
             const posicao = coleira.ultima_posicao;
             if (!posicao) return null;
@@ -287,66 +307,83 @@ export default function Mapa() {
       </div>
 
       <div className="painel-lateral">
-        {modo === "api" && <label>
-          <input type="checkbox" checked={mostrarColeiras} onChange={(evento) => {
-            setErroColeiras("");
-            setMostrarColeiras(evento.target.checked);
-          }} /> Mostrar coleiras GPS
-        </label>}
-        {mostrarColeiras && erroColeiras && <p role="alert">{erroColeiras}</p>}
-        {erro ? <div className="mensagem-erro" role="alert">{erro}</div> : null}
+        {modo === "api" && (
+          <div className="painel-coleiras-toggle">
+            <Interruptor
+              marcado={mostrarColeiras}
+              aoMudar={(ativo) => {
+                setErroColeiras("");
+                setMostrarColeiras(ativo);
+              }}
+              rotulo="Mostrar coleiras GPS"
+              descricao="Exibe a posição recente dos animais no mapa"
+            />
+          </div>
+        )}
+        {mostrarColeiras && erroColeiras && <p className="aviso-erro" role="alert">{erroColeiras}</p>}
+        {erro ? <div className="aviso-erro" role="alert" style={{ marginBottom: 12 }}>{erro}</div> : null}
 
         {novaGeometria ? (
-          <div>
-            <h2>Novo piquete</h2>
-            <form onSubmit={salvarNovo} className="formulario-piquete">
-              <label>
+          <div className="cartao formulario">
+            <h2 className="cartao-titulo">Novo piquete</h2>
+            <form onSubmit={salvarNovo} className="formulario">
+              <label className="campo">
                 Nome
-                <input required type="text" value={nome} onChange={(e) => setNome(e.target.value)} />
+                <input className="campo-entrada" required type="text" value={nome} onChange={(e) => setNome(e.target.value)} />
               </label>
-              <label>
+              <label className="campo">
                 Vegetação (espécie ou tipo de capim)
-                <input required type="text" placeholder="Marandu" value={vegetacao} onChange={(e) => setVegetacao(e.target.value)} />
+                <input className="campo-entrada" required type="text" placeholder="Marandu" value={vegetacao} onChange={(e) => setVegetacao(e.target.value)} />
               </label>
               <div className="acoes-formulario">
-                <button type="submit" className="botao-acao">Salvar</button>
-                <button type="button" className="botao-acao secundario" onClick={() => setNovaGeometria(null)}>Cancelar</button>
+                <button type="submit" className="botao botao-primario">Salvar</button>
+                <button type="button" className="botao botao-secundario" onClick={() => setNovaGeometria(null)}>Cancelar</button>
               </div>
             </form>
           </div>
         ) : (
           <div>
-            <h2>Piquetes ({piquetes.length})</h2>
-            <p className="texto-suave dica-desenho">Para cadastrar um piquete, use a ferramenta de polígono no canto do mapa.</p>
+            <div className="painel-cabecalho">
+              <h2>Piquetes</h2>
+              <span className="selo selo-alta">{piquetes.length}</span>
+            </div>
+            <p className="texto-suave dica-desenho">Use o botão de polígono no canto superior esquerdo do mapa para desenhar um novo piquete.</p>
             <ul className="lista-piquetes">
               {piquetes.map((p) => {
                 const r = resumos.find((x) => x.piquete_id === p.id);
                 return (
                   <li key={p.id} className={`item-piquete ${selecionadoId === p.id ? "ativo" : ""}`} onClick={() => setSelecionadoId(p.id)}>
-                    <h3>{p.nome}</h3>
-                    <p>{r?.vegetacao} · {decimal(p.area_ha, 2)} ha</p>
-                    <p>Situação: {r?.situacao}{r?.rebanho ? ` (${descreverRebanho(r.rebanho)})` : ""}</p>
+                    <div className="item-piquete-topo">
+                      <h3>{p.nome}</h3>
+                      {r ? (
+                        <span className={`selo ${r.situacao === "ocupado" ? "selo-alta" : "selo-media"}`}>
+                          {r.situacao === "ocupado" ? "Ocupado" : "Descansando"}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p>{r?.vegetacao || "Sem capim informado"} · {decimal(p.area_ha, 2)} ha</p>
+                    {r?.rebanho ? <p>Rebanho: {descreverRebanho(r.rebanho)}</p> : null}
                     {r?.ndvi != null && r.data_ndvi ? (
-                      <p>NDVI: {decimal(r.ndvi, 2)} em {dataCurta(r.data_ndvi)}</p>
+                      <p>NDVI: <strong>{decimal(r.ndvi, 2)}</strong> em {dataCurta(r.data_ndvi)}</p>
                     ) : <p>Sem leitura de NDVI</p>}
 
                     {selecionadoId === p.id ? (
                       <div className="acoes-piquete">
                         {editandoId === p.id ? (
                           <>
-                            <button className="botao-acao" onClick={(e) => { e.stopPropagation(); salvarForma(p.id); }}>Salvar forma</button>
-                            <button className="botao-acao secundario" onClick={(e) => { e.stopPropagation(); cancelarForma(p); }}>Cancelar</button>
+                            <button className="botao botao-primario botao-compacto" onClick={(e) => { e.stopPropagation(); void salvarForma(p.id); }}>Salvar forma</button>
+                            <button className="botao botao-secundario botao-compacto" onClick={(e) => { e.stopPropagation(); cancelarForma(p); }}>Cancelar</button>
                           </>
                         ) : confirmarDesativarId === p.id ? (
                           <>
                             <span className="confirmar-desativacao">Desativar mesmo?</span>
-                            <button className="botao-acao perigo" onClick={(e) => { e.stopPropagation(); desativar(p.id); }}>Sim</button>
-                            <button className="botao-acao secundario" onClick={(e) => { e.stopPropagation(); setConfirmarDesativarId(null); }}>Não</button>
+                            <button className="botao botao-perigo botao-compacto" onClick={(e) => { e.stopPropagation(); void desativar(p.id); }}>Sim</button>
+                            <button className="botao botao-secundario botao-compacto" onClick={(e) => { e.stopPropagation(); setConfirmarDesativarId(null); }}>Não</button>
                           </>
                         ) : (
                           <>
-                            <button className="botao-acao secundario" onClick={(e) => { e.stopPropagation(); editarForma(p.id); }}>Editar forma</button>
-                            <button className="botao-acao perigo" onClick={(e) => { e.stopPropagation(); setConfirmarDesativarId(p.id); }}>Desativar</button>
+                            <button className="botao botao-secundario botao-compacto" onClick={(e) => { e.stopPropagation(); editarForma(p.id); }}>Editar forma</button>
+                            <button className="botao botao-perigo botao-compacto" onClick={(e) => { e.stopPropagation(); setConfirmarDesativarId(p.id); }}>Desativar</button>
                           </>
                         )}
                       </div>

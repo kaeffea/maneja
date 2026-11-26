@@ -15,6 +15,7 @@
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
 }
 
 .admin-aba:hover {
@@ -40,6 +41,18 @@
   gap: 12px;
 }
 
+.admin-lista-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-filtro {
+  width: min(260px, 100%);
+}
+
 .admin-lista {
   list-style: none;
   margin: 12px 0 0;
@@ -59,6 +72,50 @@
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-pequeno);
   background: var(--cor-superficie-2);
+}
+
+.admin-item-cliente {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-item-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-subfazendas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--cor-borda);
+}
+
+.admin-chip-fazenda {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.admin-chip-fazenda:hover {
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria);
+  background: var(--cor-primaria-suave);
 }
 
 .admin-item-info {
@@ -83,6 +140,8 @@
   width: 100%;
 }
 
-.admin-form-inline .campo-entrada {
-  flex: 1 1 160px;
+.admin-form-inline .campo-entrada,
+.admin-seletor-inline {
+  flex: 1 1 170px;
+  min-width: 170px;
 }

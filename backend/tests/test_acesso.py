@@ -188,6 +188,11 @@ def test_atalhos_de_fazenda_tambem_respeitam_isolamento_de_cliente(ctx):
     me_admin = c.get("/me", headers=ctx["h_admin"]).json()
     assert me_admin["papel"] == "admin" and me_admin["cliente_id"] is None
 
+    # conta exemplo de cliente (cliente@maneja.app / cliente123) vê apenas a Fazenda do Marcinho
+    h_exemplo = _headers(c, "cliente@maneja.app", "cliente123")
+    assert [f["id"] for f in c.get("/fazendas", headers=h_exemplo).json()] == ["faz-marcinho"]
+    assert c.get(f"/fazendas/{ctx['faz_a']['id']}/piquetes", headers=h_exemplo).status_code == 403
+
 
 def test_migracao_idempotente_banco_v1_e_login_cliente_sem_estado(tmp_path):
     """Garante que o banco v1 já em produção no Supabase migra sem perder dados e suporta login sem estado."""

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Icone, type NomeIcone } from "../componentes/ui/Icones";
+import Seletor from "../componentes/ui/Seletor";
 import { CHUVA_FORTE_MM, resumoClima } from "../lib/clima";
 import { dataComDia, decimal, fimDoPlano } from "../lib/datas";
 import { useFazenda } from "../lib/fazenda";
@@ -88,17 +89,22 @@ function CartaoMovimento({ mov, bloqueado }: { mov: Movimentacao; bloqueado: boo
         </p>
       ) : escolhendo ? (
         <div className="plano-escolha">
-          <label className="campo">
-            Escolher outro piquete
-            <select className="campo-entrada" value={destino} onChange={(e) => setDestino(e.target.value)} disabled={bloqueado}>
-              <option value="" disabled>Selecione…</option>
-              {opcoes.map((r) => (
-                <option key={r.piquete_id} value={r.piquete_id}>
-                  {`${r.nome} — NDVI ${decimal(r.ndvi!, 2)}`}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="campo">
+            <span>Escolher outro piquete</span>
+            <Seletor
+              valor={destino}
+              opcoes={opcoes.map((r) => ({
+                valor: r.piquete_id,
+                rotulo: r.nome,
+                detalhe: `NDVI ${decimal(r.ndvi!, 2)} · ${decimal(r.area_ha, 2)} ha`,
+              }))}
+              aoMudar={setDestino}
+              placeholder="Selecione um piquete apto…"
+              desabilitado={bloqueado}
+              ariaLabel="Escolher outro piquete"
+              className="plano-escolha-seletor"
+            />
+          </div>
           {opcoes.length === 0 ? <p className="cartao-subtitulo">Não há outro piquete apto a receber este rebanho.</p> : null}
           <div className="formulario-acoes">
             <button className="botao botao-primario" disabled={bloqueado || destino === ""} onClick={() => void confirmar(destino)}>
@@ -137,7 +143,7 @@ function ResumoClima({ clima }: { clima: PrevisaoClima }) {
       <h2 className="cartao-titulo">Previsão da semana</h2>
       {clima.fonte && (
         <p className="cartao-subtitulo">
-          {clima.fonte === "open-meteo" ? "Open-Meteo" : "Previsão simulada"}
+          {clima.fonte === "open-meteo" ? "Open-Meteo" : "Previsão local"}
           {clima.consultado_em && agora - Date.parse(clima.consultado_em) > 12 * 3_600_000
             ? " · desatualizada" : ""}
         </p>

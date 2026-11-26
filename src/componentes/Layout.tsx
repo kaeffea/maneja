@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router";
 import { useFazenda } from "../lib/fazenda";
+import SeletorContexto from "./SeletorContexto";
 import { Icone, Marca, type NomeIcone } from "./ui/Icones";
 import "./Layout.css";
 
@@ -14,7 +15,7 @@ const LINKS: { para: string; texto: string; icone: NomeIcone }[] = [
 ];
 
 export default function Layout() {
-  const { modo, usuario, fazenda, fazendas, selecionarFazenda, sair } = useFazenda();
+  const { modo, usuario, sair } = useFazenda();
   const localizacao = useLocation();
   const ehAdmin = modo === "api" && usuario.papel === "admin";
   const emAdmin = localizacao.pathname === "/admin";
@@ -22,10 +23,15 @@ export default function Layout() {
   return (
     <div className="layout">
       <header className="barra">
-        <Link to="/mapa" className="barra-marca">
-          <Marca />
-          <span>Maneja</span>
-        </Link>
+        <div className="barra-esquerda">
+          <Link to="/mapa" className="barra-marca">
+            <Marca />
+            <span className="barra-marca-texto">Maneja</span>
+          </Link>
+          <span className="barra-divisor" aria-hidden="true" />
+          <SeletorContexto />
+        </div>
+
         <nav className="barra-links" aria-label="Navegação principal">
           {LINKS.map((item) => {
             const ativo = localizacao.pathname === item.para;
@@ -42,40 +48,29 @@ export default function Layout() {
             );
           })}
         </nav>
+
         <div className="barra-usuario">
-          {fazendas.length > 1 ? (
-            <select
-              className="barra-seletor-fazenda"
-              aria-label="Selecionar fazenda"
-              value={fazenda.id}
-              onChange={(e) => selecionarFazenda(e.target.value)}
-            >
-              {fazendas.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.nome}
-                </option>
-              ))}
-            </select>
-          ) : null}
           {ehAdmin ? (
             <Link
               to="/admin"
               className={emAdmin ? "barra-admin ativo" : "barra-admin"}
               aria-current={emAdmin ? "page" : undefined}
             >
-              Admin
+              <Icone nome="config" />
+              <span>Admin</span>
             </Link>
           ) : null}
-          <span className="barra-avatar" aria-hidden="true" title={usuario.email}>
+          <span
+            className="barra-avatar"
+            title={`${usuario.nome || usuario.email} (${usuario.email})`}
+            aria-label={usuario.nome || usuario.email}
+          >
             {(usuario.nome || usuario.email).charAt(0).toUpperCase()}
-          </span>
-          <span className="barra-usuario-texto">
-            <span className="barra-usuario-nome">{usuario.nome || usuario.email}</span>
-            <span className="barra-usuario-fazenda">{fazenda.nome}</span>
           </span>
           {sair ? (
             <button className="barra-sair" type="button" onClick={sair}>
-              Sair
+              <Icone nome="sair" />
+              <span>Sair</span>
             </button>
           ) : null}
         </div>

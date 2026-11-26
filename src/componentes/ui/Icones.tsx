@@ -6,14 +6,20 @@ export type NomeIcone =
   | "fazenda"
   | "sair"
   | "seta"
+  | "seta-baixo"
   | "alerta"
   | "relogio"
   | "ok"
+  | "check"
   | "calendario"
   | "pergunta"
   | "chuva"
   | "painel"
-  | "seta-direita";
+  | "seta-direita"
+  | "busca"
+  | "gps"
+  | "lixeira"
+  | "config";
 
 const CAMINHOS: Record<NomeIcone, string[]> = {
   clientes: [
@@ -49,6 +55,7 @@ const CAMINHOS: Record<NomeIcone, string[]> = {
     "M21 12H9",
   ],
   seta: ["M9 18l6-6-6-6"],
+  "seta-baixo": ["M6 9l6 6 6-6"],
   alerta: [
     "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",
     "M12 9v4",
@@ -56,6 +63,7 @@ const CAMINHOS: Record<NomeIcone, string[]> = {
   ],
   relogio: ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z", "M12 6v6l4 2"],
   ok: ["M22 11.08V12a10 10 0 1 1-5.93-9.14", "M22 4L12 14.01l-3-3"],
+  check: ["M20 6L9 17l-5-5"],
   calendario: ["M3 4h18v18H3z", "M16 2v4", "M8 2v4", "M3 10h18"],
   pergunta: [
     "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z",
@@ -70,6 +78,27 @@ const CAMINHOS: Record<NomeIcone, string[]> = {
   ],
   painel: ["M18 20V10", "M12 20V4", "M6 20v-6"],
   "seta-direita": ["M5 12h14", "M12 5l7 7-7 7"],
+  busca: [
+    "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z",
+    "M21 21l-4.35-4.35",
+  ],
+  gps: [
+    "M12 2v3",
+    "M12 19v3",
+    "M2 12h3",
+    "M19 12h3",
+    "M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+    "M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z",
+  ],
+  lixeira: [
+    "M3 6h18",
+    "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+    "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6",
+  ],
+  config: [
+    "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+    "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z",
+  ],
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {

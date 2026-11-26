@@ -4,7 +4,6 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useNavigate } from "react-router";
 import {
   api,
-  API_URL,
   carregarBase,
   EVENTO_SESSAO_EXPIRADA,
   guardarFazendaSalva,
@@ -22,7 +21,7 @@ import { areaHa } from "./geo";
 import { ultimaLeitura } from "./ndvi";
 import { lotacaoDe, totalAnimais } from "./rebanho";
 import { validarMovimento } from "./regras";
-import type { Fazenda, GeoJsonPolygon, Lote, Movimentacao, PlanoManejo, Rebanho, Usuario } from "./tipos";
+import type { Cliente, Fazenda, GeoJsonPolygon, Lote, Movimentacao, PlanoManejo, Rebanho, Usuario } from "./tipos";
 
 export interface EstadoDemo extends Base {
   plano: PlanoManejo | null;
@@ -44,6 +43,7 @@ interface Contexto {
   estado: EstadoDemo;
   fazenda: Fazenda;
   fazendas: Fazenda[];
+  clientes: Cliente[];
   lotes: Lote[];
   hoje: string;
   selecionarFazenda: (fazendaId: string) => void;
@@ -217,6 +217,7 @@ function ProviderDemo({ children }: { children: ReactNode }) {
         estado,
         fazenda,
         fazendas: [fazenda],
+        clientes: [],
         lotes: [],
         hoje,
         selecionarFazenda: () => undefined,
@@ -244,6 +245,7 @@ function ProviderApi({ children }: { children: ReactNode }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [fazendas, setFazendas] = useState<Fazenda[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [fazendaAtivaId, setFazendaAtivaId] = useState<string | null>(() => lerFazendaSalva());
   const [estado, setEstado] = useState<EstadoDemo | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -252,6 +254,7 @@ function ProviderApi({ children }: { children: ReactNode }) {
     sair();
     setUsuario(null);
     setFazendas([]);
+    setClientes([]);
     setFazendaAtivaId(null);
     setEstado(null);
     setLogado(false);
@@ -270,8 +273,10 @@ function ProviderApi({ children }: { children: ReactNode }) {
 
   const carregarSessaoEFazendas = useCallback(async (preferida?: string): Promise<string | null> => {
     const [me, lista] = await Promise.all([api.me(), api.fazendas()]);
+    const listaClientes = me.papel === "admin" ? await api.clientes().catch(() => []) : [];
     setUsuario(me);
     setFazendas(lista);
+    setClientes(listaClientes);
     const salva = preferida ?? lerFazendaSalva();
     const valida = salva && lista.some((f) => f.id === salva) ? salva : (lista[0]?.id ?? null);
     setFazendaAtivaId(valida);
@@ -324,9 +329,26 @@ function ProviderApi({ children }: { children: ReactNode }) {
 
   if (erro !== null && usuario === null) {
     return (
-      <div className="aviso-alerta" role="alert" style={{ margin: 24 }}>
-        Não foi possível carregar os dados: {erro}. Confira se o backend está rodando em {API_URL}
-        {" "}(<code>cd backend && uv run uvicorn maneja.api:app --reload</code>).
+      <div className="pagina" style={{ margin: "40px auto", padding: "0 16px" }}>
+        <section className="cartao formulario">
+          <h1 className="cartao-titulo">Não foi possível conectar ao Maneja</h1>
+          <p className="aviso-erro" role="alert">{erro}</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="botao botao-primario"
+              type="button"
+              onClick={() => {
+                setErro(null);
+                carregarSessaoEFazendas().catch((e: unknown) => setErro(mensagemDeErro(e)));
+              }}
+            >
+              Tentar novamente
+            </button>
+            <button className="botao botao-secundario" type="button" onClick={deslogar}>
+              Sair
+            </button>
+          </div>
+        </section>
       </div>
     );
   }
@@ -341,7 +363,7 @@ function ProviderApi({ children }: { children: ReactNode }) {
         <section className="cartao">
           <h1 className="pagina-titulo">Bem-vindo, {usuario.nome || usuario.email}</h1>
           <p className="cartao-subtitulo" style={{ marginTop: 8 }}>
-            Nenhuma fazenda foi vinculada à sua conta ainda. Peça ao administrador do Maneja para cadastrar ou vincular sua fazenda.
+            Nenhuma fazenda foi vinculada à sua conta ainda. Fale com o administrador para cadastrar ou vincular sua fazenda.
           </p>
           <div style={{ marginTop: 16 }}>
             <button className="botao botao-secundario" type="button" onClick={deslogar}>Sair</button>
@@ -354,8 +376,23 @@ function ProviderApi({ children }: { children: ReactNode }) {
   if (fazendaAtivaId && estado === null) {
     if (erro !== null) {
       return (
-        <div className="aviso-alerta" role="alert" style={{ margin: 24 }}>
-          Erro ao carregar a fazenda: {erro}.
+        <div className="pagina" style={{ margin: "40px auto", padding: "0 16px" }}>
+          <section className="cartao formulario">
+            <h1 className="cartao-titulo">Erro ao carregar a fazenda</h1>
+            <p className="aviso-erro" role="alert">{erro}</p>
+            <div>
+              <button
+                className="botao botao-primario"
+                type="button"
+                onClick={() => {
+                  setErro(null);
+                  recarregarFazendaAtiva(fazendaAtivaId).catch((e: unknown) => setErro(mensagemDeErro(e)));
+                }}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          </section>
         </div>
       );
     }
@@ -392,6 +429,7 @@ function ProviderApi({ children }: { children: ReactNode }) {
     estado: estadoSeguro,
     fazenda,
     fazendas,
+    clientes,
     lotes: estadoSeguro.lotes,
     hoje: hojeNaFazenda(fazenda.timezone),
     selecionarFazenda,

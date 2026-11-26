@@ -58,7 +58,7 @@
   --cor-confianca-baixa-fundo: #f4e3d2;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 899px) {
   :root {
     --altura-topo: calc(var(--altura-barra) + var(--altura-barra-inferior));
   }
@@ -162,19 +162,29 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   min-height: 40px;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border: 1px solid transparent;
   border-radius: var(--raio-pequeno);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
+}
+
+.botao:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.botao:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cor-primaria-suave);
 }
 
 .botao:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -196,6 +206,16 @@ h3 {
 .botao-secundario:hover:not(:disabled) {
   border-color: var(--cor-primaria);
   color: var(--cor-primaria);
+  background: var(--cor-superficie-2);
+}
+
+.botao-perigo {
+  background: var(--cor-erro);
+  color: var(--cor-superficie);
+}
+
+.botao-perigo:hover:not(:disabled) {
+  background: #911c13;
 }
 
 /* ---------- formulário ---------- */
@@ -216,18 +236,25 @@ h3 {
 
 .campo-entrada {
   width: 100%;
-  padding: 10px 12px;
+  min-height: 42px;
+  padding: 9px 13px;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-pequeno);
   background: var(--cor-superficie);
   color: var(--cor-texto);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.campo-entrada:hover:not(:disabled) {
+  border-color: #bfb7a6;
 }
 
 .campo-entrada:focus {
-  outline: 2px solid var(--cor-primaria-suave);
+  outline: none;
   border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 3px var(--cor-primaria-suave);
 }
 
 .campo-dica {

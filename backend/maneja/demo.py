@@ -1,18 +1,45 @@
-"""Fazenda de demonstração: os mesmos dados de src/lib/demo.ts, mais as coleiras.
+"""Fazenda de demonstração: os mesmos dados de src/lib/demo.ts, mais as coleiras e a conta cliente exemplo.
 
 As datas são relativas a "hoje", para a demonstração funcionar em qualquer dia.
 """
 
 from __future__ import annotations
 
+from .autenticacao import hash_senha
 from .datas import somar_dias
-from .dominio import Cliente, Coleira, Fazenda, LeituraNdvi, Lotacao, Movimentacao, Piquete, Rebanho
+from .dominio import Cliente, Coleira, Fazenda, LeituraNdvi, Lotacao, Movimentacao, Piquete, Rebanho, Usuario
 from .geo import area_ha, poligono_em_metros
 from .repositorio import RepositorioMemoria
 
 CLIENTE_ID = "cli-marcinho"
+CLIENTE_NOME = "Marcinho"
+CLIENTE_CONTATO = "(82) 99999-0000"
+USUARIO_CLIENTE_ID = "usr-marcinho"
+USUARIO_CLIENTE_EMAIL = "cliente@maneja.app"
+USUARIO_CLIENTE_SENHA = "cliente123"
 FAZENDA_ID = "faz-marcinho"
 ORIGEM = (-9.6205, -35.9695)
+
+_HASH_CLIENTE_EXEMPLO: str | None = None
+
+
+def hash_cliente_exemplo() -> str:
+    global _HASH_CLIENTE_EXEMPLO
+    if _HASH_CLIENTE_EXEMPLO is None:
+        _HASH_CLIENTE_EXEMPLO = hash_senha(USUARIO_CLIENTE_SENHA)
+    return _HASH_CLIENTE_EXEMPLO
+
+
+def usuario_cliente_exemplo() -> Usuario:
+    return Usuario(
+        id=USUARIO_CLIENTE_ID,
+        email=USUARIO_CLIENTE_EMAIL,
+        senha_hash=hash_cliente_exemplo(),
+        papel="cliente",
+        cliente_id=CLIENTE_ID,
+        nome=CLIENTE_NOME,
+    )
+
 
 # ids dos mesmos piquetes no SeuGado (usados pelo plano de exemplo em exemplos/plano-seugado.json)
 EXTERNOS = {
@@ -59,7 +86,7 @@ def coleiras_demo() -> list[Coleira]:
 
 
 def repositorio_demo(hoje: str) -> RepositorioMemoria:
-    cliente_demo = Cliente(CLIENTE_ID, "Marcinho", "")
+    cliente_demo = Cliente(CLIENTE_ID, CLIENTE_NOME, CLIENTE_CONTATO)
     fazenda_demo = Fazenda(FAZENDA_ID, "Fazenda do Marcinho", "America/Maceio", cliente_id=CLIENTE_ID)
     piquetes = piquetes_demo()
     nome = {p.id: p.nome for p in piquetes}
@@ -98,6 +125,7 @@ def repositorio_demo(hoje: str) -> RepositorioMemoria:
     return RepositorioMemoria(
         fazenda=fazenda_demo,
         clientes=[cliente_demo],
+        usuarios=[usuario_cliente_exemplo()],
         fazendas=[fazenda_demo],
         piquetes=piquetes,
         lotacao=lotacao,

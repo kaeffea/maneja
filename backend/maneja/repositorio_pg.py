@@ -108,7 +108,21 @@ class RepositorioPg(RepositorioMemoria):
             repo.fisico = {c.id: c.piquete_cadastro_id for c in repo.coleiras}
             repo.salvar(apenas_se_vazio=True)
             return cls._carregar(url)
-        return cls._carregar(url)
+        repo = cls._carregar(url)
+        # Se um banco já existente (migrado da v1) tem a fazenda exemplo sem nenhum usuário cliente cadastrado,
+        # cria o cliente Marcinho e a conta exemplo cliente@maneja.app para acesso imediato.
+        if semente is not None and not repo.usuarios:
+            faz_demo = next((f for f in repo.fazendas if f.id == "faz-marcinho"), None)
+            if faz_demo is not None:
+                from .demo import CLIENTE_CONTATO, CLIENTE_ID, CLIENTE_NOME, usuario_cliente_exemplo
+
+                if not any(c.id == CLIENTE_ID for c in repo.clientes):
+                    repo.clientes.insert(0, Cliente(CLIENTE_ID, CLIENTE_NOME, CLIENTE_CONTATO))
+                if faz_demo.cliente_id is None:
+                    faz_demo.cliente_id = CLIENTE_ID
+                repo.usuarios.append(usuario_cliente_exemplo())
+                repo.salvar()
+        return repo
 
     @classmethod
     def _carregar(cls, url: str) -> RepositorioPg:

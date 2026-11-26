@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router";
+import Seletor, { type OpcaoSeletor } from "../componentes/ui/Seletor";
 import { api, mensagemDeErro } from "../lib/api";
 import { useFazenda } from "../lib/fazenda";
 import type {
@@ -13,6 +14,11 @@ import type {
 import "./Admin.css";
 
 type Aba = "clientes" | "fazendas" | "usuarios" | "piquetech";
+
+const OPCOES_PAPEL: OpcaoSeletor[] = [
+  { valor: "cliente", rotulo: "Cliente", detalhe: "Acessa e edita apenas as próprias fazendas" },
+  { valor: "admin", rotulo: "Administrador", detalhe: "Gerencia clientes, fazendas, usuários e integrações" },
+];
 
 export default function Admin() {
   const { modo, usuario, fazendas: fazendasCtx, selecionarFazenda, recarregarFazendas } = useFazenda();
@@ -35,7 +41,8 @@ export default function Admin() {
   const [editCliNome, setEditCliNome] = useState("");
   const [editCliContato, setEditCliContato] = useState("");
 
-  // Nova fazenda
+  // Fazendas (com filtro por cliente)
+  const [filtroClienteId, setFiltroClienteId] = useState("");
   const [novaFazNome, setNovaFazNome] = useState("");
   const [novaFazCliId, setNovaFazCliId] = useState("");
   const [novaFazTz, setNovaFazTz] = useState("America/Maceio");
@@ -43,7 +50,7 @@ export default function Admin() {
   const [editFazNome, setEditFazNome] = useState("");
   const [editFazCliId, setEditFazCliId] = useState("");
 
-  // Novo usuário
+  // Usuários
   const [novoUsrNome, setNovoUsrNome] = useState("");
   const [novoUsrEmail, setNovoUsrEmail] = useState("");
   const [novoUsrSenha, setNovoUsrSenha] = useState("");
@@ -83,6 +90,43 @@ export default function Admin() {
       .finally(() => setCarregando(false));
   }, [modo, usuario.papel, carregarTudo]);
 
+  const opcoesClientes = useMemo<OpcaoSeletor[]>(
+    () => clientes.map((c) => ({ valor: c.id, rotulo: c.nome, detalhe: c.contato || undefined })),
+    [clientes],
+  );
+
+  const opcoesFiltroCliente = useMemo<OpcaoSeletor[]>(
+    () => [
+      { valor: "", rotulo: "Todos os clientes", detalhe: `${fazendas.length} fazenda(s)` },
+      ...clientes.map((c) => ({
+        valor: c.id,
+        rotulo: c.nome,
+        detalhe: `${fazendas.filter((f) => f.cliente_id === c.id).length} fazenda(s)`,
+      })),
+    ],
+    [clientes, fazendas],
+  );
+
+  const opcoesClientesOpcional = useMemo<OpcaoSeletor[]>(
+    () => [{ valor: "", rotulo: "Sem cliente vinculado" }, ...opcoesClientes],
+    [opcoesClientes],
+  );
+
+  const opcoesCultivares = useMemo<OpcaoSeletor[]>(
+    () =>
+      cultivaresPt.map((c) => ({
+        valor: c.id,
+        rotulo: c.nome,
+        detalhe: c.calibrada ? "Calibrada no PiqueTech" : "Em calibração",
+      })),
+    [cultivaresPt],
+  );
+
+  const fazendasFiltradas = useMemo(
+    () => (filtroClienteId ? fazendas.filter((f) => f.cliente_id === filtroClienteId) : fazendas),
+    [fazendas, filtroClienteId],
+  );
+
   if (modo !== "api" || usuario.papel !== "admin") {
     return <Navigate to="/mapa" replace />;
   }
@@ -112,6 +156,7 @@ export default function Admin() {
       await api.criarCliente({ nome: novoCliNome.trim(), contato: novoCliContato.trim() });
       setNovoCliNome("");
       setNovoCliContato("");
+      await recarregarFazendas();
     }, "Cliente criado.");
   }
 
@@ -121,16 +166,18 @@ export default function Admin() {
     await executar(async () => {
       await api.atualizarCliente(editCliId, { nome: editCliNome.trim(), contato: editCliContato.trim() });
       setEditCliId(null);
+      await recarregarFazendas();
     }, "Cliente atualizado.");
   }
 
   // ---------- Fazendas ----------
   async function criarFazenda(e: FormEvent) {
     e.preventDefault();
+    if (!novaFazCliId) return;
     await executar(async () => {
       const criada = await api.criarFazenda({
         nome: novaFazNome.trim(),
-        cliente_id: novaFazCliId || null,
+        cliente_id: novaFazCliId,
         timezone: novaFazTz.trim() || "America/Maceio",
       });
       setNovaFazNome("");
@@ -159,13 +206,17 @@ export default function Admin() {
   // ---------- Usuários ----------
   async function criarUsuario(e: FormEvent) {
     e.preventDefault();
+    if (novoUsrPapel === "cliente" && !novoUsrCliId) {
+      setErro("Selecione o cliente vinculado para este usuário.");
+      return;
+    }
     await executar(async () => {
       await api.criarUsuario({
         nome: novoUsrNome.trim(),
         email: novoUsrEmail.trim(),
         senha: novoUsrSenha,
         papel: novoUsrPapel,
-        cliente_id: novoUsrPapel === "cliente" ? (novoUsrCliId || null) : null,
+        cliente_id: novoUsrPapel === "cliente" ? novoUsrCliId : null,
       });
       setNovoUsrNome("");
       setNovoUsrEmail("");
@@ -176,12 +227,16 @@ export default function Admin() {
   async function salvarUsuario(e: FormEvent) {
     e.preventDefault();
     if (!editUsrId) return;
+    if (editUsrPapel === "cliente" && !editUsrCliId) {
+      setErro("Selecione o cliente vinculado para este usuário.");
+      return;
+    }
     await executar(async () => {
       const dados: Parameters<typeof api.atualizarUsuario>[1] = {
         nome: editUsrNome.trim(),
         email: editUsrEmail.trim(),
         papel: editUsrPapel,
-        cliente_id: editUsrPapel === "cliente" ? (editUsrCliId || null) : null,
+        cliente_id: editUsrPapel === "cliente" ? editUsrCliId : null,
       };
       if (editUsrSenha) dados.senha = editUsrSenha;
       await api.atualizarUsuario(editUsrId, dados);
@@ -248,7 +303,7 @@ export default function Admin() {
       <div className="pagina-cabecalho">
         <div>
           <h1 className="pagina-titulo">Administração</h1>
-          <p className="cartao-subtitulo">Clientes, fazendas, acessos e integração com o PiqueTech</p>
+          <p className="cartao-subtitulo">Gerencie clientes, suas fazendas, acessos e a integração com o PiqueTech</p>
         </div>
       </div>
 
@@ -280,7 +335,7 @@ export default function Admin() {
       {aviso ? <p className="aviso-info" role="status">{aviso}</p> : null}
       {carregando ? <p className="cartao-subtitulo">Carregando cadastros…</p> : null}
 
-      {/* ---------- CLIENTES ---------- */}
+      {/* ---------- CLIENTES (com as fazendas de cada cliente) ---------- */}
       {!carregando && aba === "clientes" && (
         <>
           <form className="cartao admin-form" onSubmit={(e) => void criarCliente(e)}>
@@ -289,7 +344,7 @@ export default function Admin() {
               <label className="campo">
                 Nome
                 <input className="campo-entrada" required value={novoCliNome}
-                  onChange={(e) => setNovoCliNome(e.target.value)} placeholder="Ex.: Fazenda São José / João" />
+                  onChange={(e) => setNovoCliNome(e.target.value)} placeholder="Ex.: João da Silva" />
               </label>
               <label className="campo">
                 Contato (telefone ou e-mail)
@@ -303,16 +358,16 @@ export default function Admin() {
           </form>
 
           <section className="cartao">
-            <h2 className="cartao-titulo">Clientes cadastrados</h2>
+            <h2 className="cartao-titulo">Clientes e suas fazendas</h2>
             {clientes.length === 0 ? (
-              <p className="cartao-subtitulo">Nenhum cliente cadastrado ainda.</p>
+              <p className="cartao-subtitulo" style={{ marginTop: 8 }}>Nenhum cliente cadastrado ainda.</p>
             ) : (
               <ul className="admin-lista">
                 {clientes.map((c) => {
-                  const qtdFaz = fazendas.filter((f) => f.cliente_id === c.id).length;
+                  const fazendasDoCliente = fazendas.filter((f) => f.cliente_id === c.id);
                   const editando = editCliId === c.id;
                   return (
-                    <li key={c.id} className="admin-item">
+                    <li key={c.id} className="admin-item admin-item-cliente">
                       {editando ? (
                         <form className="admin-form-inline" onSubmit={(e) => void salvarCliente(e)}>
                           <input className="campo-entrada" required value={editCliNome}
@@ -326,26 +381,55 @@ export default function Admin() {
                         </form>
                       ) : (
                         <>
-                          <div className="admin-item-info">
-                            <strong>{c.nome}</strong>
-                            <span className="cartao-subtitulo">
-                              {c.contato || "Sem contato"} · {qtdFaz} fazenda(s)
-                            </span>
+                          <div className="admin-item-cabecalho">
+                            <div className="admin-item-info">
+                              <strong>{c.nome}</strong>
+                              <span className="cartao-subtitulo">
+                                {c.contato || "Sem contato"} · {fazendasDoCliente.length} fazenda(s)
+                              </span>
+                            </div>
+                            <div className="admin-acoes">
+                              {c.seugado_id ? <span className="selo selo-alta">PiqueTech</span> : null}
+                              <button
+                                className="botao botao-secundario"
+                                type="button"
+                                onClick={() => {
+                                  setFiltroClienteId(c.id);
+                                  setNovaFazCliId(c.id);
+                                  setAba("fazendas");
+                                }}
+                              >
+                                + Fazenda
+                              </button>
+                              <button
+                                className="botao botao-secundario"
+                                type="button"
+                                onClick={() => {
+                                  setEditCliId(c.id);
+                                  setEditCliNome(c.nome);
+                                  setEditCliContato(c.contato);
+                                }}
+                              >
+                                Editar
+                              </button>
+                            </div>
                           </div>
-                          <div className="admin-acoes">
-                            {c.seugado_id ? <span className="selo selo-alta">PiqueTech</span> : null}
-                            <button
-                              className="botao botao-secundario"
-                              type="button"
-                              onClick={() => {
-                                setEditCliId(c.id);
-                                setEditCliNome(c.nome);
-                                setEditCliContato(c.contato);
-                              }}
-                            >
-                              Editar
-                            </button>
-                          </div>
+
+                          {fazendasDoCliente.length > 0 && (
+                            <div className="admin-subfazendas">
+                              {fazendasDoCliente.map((f) => (
+                                <button
+                                  key={f.id}
+                                  type="button"
+                                  className="admin-chip-fazenda"
+                                  onClick={() => abrirFazenda(f.id)}
+                                >
+                                  <span>{f.nome}</span>
+                                  {f.seugado_id ? <span className="selo selo-alta">PiqueTech</span> : null}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </>
                       )}
                     </li>
@@ -368,14 +452,16 @@ export default function Admin() {
                 <input className="campo-entrada" required value={novaFazNome}
                   onChange={(e) => setNovaFazNome(e.target.value)} placeholder="Ex.: Fazenda Boa Vista" />
               </label>
-              <label className="campo">
-                Cliente
-                <select className="campo-entrada" required value={novaFazCliId}
-                  onChange={(e) => setNovaFazCliId(e.target.value)}>
-                  <option value="">Selecione um cliente…</option>
-                  {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                </select>
-              </label>
+              <div className="campo">
+                <span>Cliente</span>
+                <Seletor
+                  valor={novaFazCliId}
+                  opcoes={opcoesClientes}
+                  aoMudar={setNovaFazCliId}
+                  placeholder="Selecione um cliente…"
+                  ariaLabel="Cliente da nova fazenda"
+                />
+              </div>
               <label className="campo">
                 Fuso horário
                 <input className="campo-entrada" value={novaFazTz}
@@ -390,65 +476,82 @@ export default function Admin() {
           </form>
 
           <section className="cartao">
-            <h2 className="cartao-titulo">Fazendas cadastradas</h2>
-            <ul className="admin-lista">
-              {fazendas.map((f) => {
-                const editando = editFazId === f.id;
-                return (
-                  <li key={f.id} className="admin-item">
-                    {editando ? (
-                      <form className="admin-form-inline" onSubmit={(e) => void salvarFazenda(e)}>
-                        <input className="campo-entrada" required value={editFazNome}
-                          onChange={(e) => setEditFazNome(e.target.value)} aria-label="Nome da fazenda" />
-                        <select className="campo-entrada" value={editFazCliId}
-                          onChange={(e) => setEditFazCliId(e.target.value)} aria-label="Cliente">
-                          <option value="">Sem cliente</option>
-                          {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                        </select>
-                        <div className="admin-acoes">
-                          <button className="botao botao-primario" type="submit" disabled={ocupado}>Salvar</button>
-                          <button className="botao botao-secundario" type="button" onClick={() => setEditFazId(null)}>Cancelar</button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                        <div className="admin-item-info">
-                          <strong>{f.nome}</strong>
-                          <span className="cartao-subtitulo">
-                            Cliente: {nomeCliente(f.cliente_id)} · {f.timezone}
-                          </span>
-                        </div>
-                        <div className="admin-acoes">
-                          <span className={f.seugado_id ? "selo selo-alta" : "selo selo-media"}>
-                            {f.seugado_id ? "PiqueTech" : "Maneja"}
-                          </span>
-                          <button className="botao botao-primario" type="button" onClick={() => abrirFazenda(f.id)}>
-                            Abrir
-                          </button>
-                          {f.seugado_id && modoSeugado === "api" ? (
-                            <button className="botao botao-secundario" type="button" disabled={ocupado}
-                              onClick={() => void atualizarDoPiqueTech(f.id)}>
-                              Atualizar do PiqueTech
+            <div className="admin-lista-cabecalho">
+              <h2 className="cartao-titulo">Fazendas cadastradas ({fazendasFiltradas.length})</h2>
+              <div className="admin-filtro">
+                <Seletor
+                  valor={filtroClienteId}
+                  opcoes={opcoesFiltroCliente}
+                  aoMudar={setFiltroClienteId}
+                  ariaLabel="Filtrar fazendas por cliente"
+                />
+              </div>
+            </div>
+            {fazendasFiltradas.length === 0 ? (
+              <p className="cartao-subtitulo" style={{ marginTop: 12 }}>Nenhuma fazenda encontrada para este cliente.</p>
+            ) : (
+              <ul className="admin-lista">
+                {fazendasFiltradas.map((f) => {
+                  const editando = editFazId === f.id;
+                  return (
+                    <li key={f.id} className="admin-item">
+                      {editando ? (
+                        <form className="admin-form-inline" onSubmit={(e) => void salvarFazenda(e)}>
+                          <input className="campo-entrada" required value={editFazNome}
+                            onChange={(e) => setEditFazNome(e.target.value)} aria-label="Nome da fazenda" />
+                          <div className="admin-seletor-inline">
+                            <Seletor
+                              valor={editFazCliId}
+                              opcoes={opcoesClientesOpcional}
+                              aoMudar={setEditFazCliId}
+                              ariaLabel="Cliente da fazenda"
+                            />
+                          </div>
+                          <div className="admin-acoes">
+                            <button className="botao botao-primario" type="submit" disabled={ocupado}>Salvar</button>
+                            <button className="botao botao-secundario" type="button" onClick={() => setEditFazId(null)}>Cancelar</button>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                          <div className="admin-item-info">
+                            <strong>{f.nome}</strong>
+                            <span className="cartao-subtitulo">
+                              Cliente: {nomeCliente(f.cliente_id)} · {f.timezone}
+                            </span>
+                          </div>
+                          <div className="admin-acoes">
+                            <span className={f.seugado_id ? "selo selo-alta" : "selo selo-media"}>
+                              {f.seugado_id ? "PiqueTech" : "Maneja"}
+                            </span>
+                            <button className="botao botao-primario" type="button" onClick={() => abrirFazenda(f.id)}>
+                              Abrir
                             </button>
-                          ) : null}
-                          <button
-                            className="botao botao-secundario"
-                            type="button"
-                            onClick={() => {
-                              setEditFazId(f.id);
-                              setEditFazNome(f.nome);
-                              setEditFazCliId(f.cliente_id ?? "");
-                            }}
-                          >
-                            Editar
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+                            {f.seugado_id && modoSeugado === "api" ? (
+                              <button className="botao botao-secundario" type="button" disabled={ocupado}
+                                onClick={() => void atualizarDoPiqueTech(f.id)}>
+                                Atualizar do PiqueTech
+                              </button>
+                            ) : null}
+                            <button
+                              className="botao botao-secundario"
+                              type="button"
+                              onClick={() => {
+                                setEditFazId(f.id);
+                                setEditFazNome(f.nome);
+                                setEditFazCliId(f.cliente_id ?? "");
+                              }}
+                            >
+                              Editar
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </section>
         </>
       )}
@@ -474,23 +577,26 @@ export default function Admin() {
                 <input className="campo-entrada" type="password" required minLength={4} value={novoUsrSenha}
                   onChange={(e) => setNovoUsrSenha(e.target.value)} placeholder="Mínimo 4 caracteres" />
               </label>
-              <label className="campo">
-                Papel
-                <select className="campo-entrada" value={novoUsrPapel}
-                  onChange={(e) => setNovoUsrPapel(e.target.value as PapelUsuario)}>
-                  <option value="cliente">Cliente (vê só suas fazendas)</option>
-                  <option value="admin">Admin (vê tudo)</option>
-                </select>
-              </label>
+              <div className="campo">
+                <span>Papel</span>
+                <Seletor
+                  valor={novoUsrPapel}
+                  opcoes={OPCOES_PAPEL}
+                  aoMudar={(v) => setNovoUsrPapel(v as PapelUsuario)}
+                  ariaLabel="Papel do usuário"
+                />
+              </div>
               {novoUsrPapel === "cliente" && (
-                <label className="campo">
-                  Cliente vinculado
-                  <select className="campo-entrada" required value={novoUsrCliId}
-                    onChange={(e) => setNovoUsrCliId(e.target.value)}>
-                    <option value="">Selecione um cliente…</option>
-                    {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                  </select>
-                </label>
+                <div className="campo">
+                  <span>Cliente vinculado</span>
+                  <Seletor
+                    valor={novoUsrCliId}
+                    opcoes={opcoesClientes}
+                    aoMudar={setNovoUsrCliId}
+                    placeholder="Selecione um cliente…"
+                    ariaLabel="Cliente vinculado"
+                  />
+                </div>
               )}
             </div>
             <div>
@@ -500,8 +606,8 @@ export default function Admin() {
 
           <section className="cartao">
             <h2 className="cartao-titulo">Usuários cadastrados</h2>
-            <p className="cartao-subtitulo" style={{ marginBottom: 12 }}>
-              O administrador principal configurado no ambiente ({usuario.email}) sempre mantém acesso de admin.
+            <p className="cartao-subtitulo" style={{ marginTop: 4, marginBottom: 12 }}>
+              O administrador principal ({usuario.email}) sempre mantém acesso completo.
             </p>
             {usuarios.length === 0 ? (
               <p className="cartao-subtitulo">Nenhum usuário adicional cadastrado ainda.</p>
@@ -519,17 +625,24 @@ export default function Admin() {
                             onChange={(e) => setEditUsrEmail(e.target.value)} aria-label="E-mail" />
                           <input className="campo-entrada" type="password" value={editUsrSenha}
                             onChange={(e) => setEditUsrSenha(e.target.value)} placeholder="Nova senha (opcional)" />
-                          <select className="campo-entrada" value={editUsrPapel}
-                            onChange={(e) => setEditUsrPapel(e.target.value as PapelUsuario)}>
-                            <option value="cliente">Cliente</option>
-                            <option value="admin">Admin</option>
-                          </select>
+                          <div className="admin-seletor-inline">
+                            <Seletor
+                              valor={editUsrPapel}
+                              opcoes={OPCOES_PAPEL}
+                              aoMudar={(v) => setEditUsrPapel(v as PapelUsuario)}
+                              ariaLabel="Papel"
+                            />
+                          </div>
                           {editUsrPapel === "cliente" && (
-                            <select className="campo-entrada" required value={editUsrCliId}
-                              onChange={(e) => setEditUsrCliId(e.target.value)}>
-                              <option value="">Cliente…</option>
-                              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                            </select>
+                            <div className="admin-seletor-inline">
+                              <Seletor
+                                valor={editUsrCliId}
+                                opcoes={opcoesClientes}
+                                aoMudar={setEditUsrCliId}
+                                placeholder="Cliente…"
+                                ariaLabel="Cliente"
+                              />
+                            </div>
                           )}
                           <div className="admin-acoes">
                             <button className="botao botao-primario" type="submit" disabled={ocupado}>Salvar</button>
@@ -582,10 +695,11 @@ export default function Admin() {
               <div>
                 <h2 className="cartao-titulo">Importar do PiqueTech</h2>
                 <p className="cartao-subtitulo">
-                  Modo atual da API: <strong>{modoSeugado}</strong>.
-                  {modoSeugado !== "api"
-                    ? " Configure MANEJA_SEUGADO_MODO=api, MANEJA_SEUGADO_URL, MANEJA_SEUGADO_EMAIL e MANEJA_SEUGADO_SENHA para conectar ao PiqueTech."
-                    : " Busque as fazendas cadastradas no PiqueTech para importar cliente, fazenda, piquetes e lotes com o mesmo UUID."}
+                  Status da conexão:{" "}
+                  <strong>{modoSeugado === "api" ? "Conectado ao PiqueTech" : "Integração desligada"}</strong>.
+                  {modoSeugado === "api"
+                    ? " Busque as fazendas do PiqueTech para importar cliente, fazenda, piquetes e lotes com o mesmo UUID."
+                    : " Ative a integração no ambiente da API para importar e exportar fazendas."}
                 </p>
               </div>
               <button
@@ -643,17 +757,16 @@ export default function Admin() {
             <p className="cartao-subtitulo">
               Envia cliente, fazenda, piquetes e lotes para o PiqueTech e guarda os UUIDs no Maneja.
             </p>
-            {cultivaresPt.length > 0 && (
-              <label className="campo" style={{ maxWidth: 360 }}>
-                Cultivar para os piquetes criados
-                <select className="campo-entrada" value={cultivarId} onChange={(e) => setCultivarId(e.target.value)}>
-                  {cultivaresPt.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome}{c.calibrada ? " (calibrada)" : " (em calibração)"}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            {opcoesCultivares.length > 0 && (
+              <div className="campo" style={{ maxWidth: 360 }}>
+                <span>Cultivar para os piquetes criados</span>
+                <Seletor
+                  valor={cultivarId}
+                  opcoes={opcoesCultivares}
+                  aoMudar={setCultivarId}
+                  ariaLabel="Cultivar"
+                />
+              </div>
             )}
             <ul className="admin-lista">
               {fazendas.filter((f) => !f.seugado_id).map((f) => (

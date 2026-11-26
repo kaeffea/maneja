@@ -177,9 +177,6 @@ export const api = {
   ocupacao: (fazendaId: string) => chamar<OcupacaoPiquete[]>("GET", `${baseFazenda(fazendaId)}/ocupacao`),
   verificacoes: (fazendaId: string) =>
     chamar<{ verificacoes: Verificacao[]; avisos: string[] }>("GET", `${baseFazenda(fazendaId)}/verificacoes`),
-  avancarCampo: (fazendaId: string) => chamar("POST", `${baseFazenda(fazendaId)}/simulador/avancar`, { horas: 24 }),
-  moverColeiras: (fazendaId: string, id: string, piqueteId: string) =>
-    chamar("POST", `${baseFazenda(fazendaId)}/simulador/executar/${encodeURIComponent(id)}`, { piquete_id: piqueteId }),
   gerarPlano: (fazendaId: string) => chamar<PlanoManejo>("POST", `${baseFazenda(fazendaId)}/plano`),
   aceitar: (fazendaId: string, id: string, destinoId?: string) =>
     chamar<Movimentacao>(
